@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/components/providers/auth-provider';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase'; // Removed auth import as it's not directly used here
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 
 export default function ProfilePage() {
+  const t = useTranslations('ProfilePage');
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [companyDataLoading, setCompanyDataLoading] = useState(true);
@@ -101,7 +103,7 @@ export default function ProfilePage() {
           }
         } catch (error) {
           console.error('Error fetching company data:', error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not load company profile.' });
+          toast({ variant: 'destructive', title: t('Generic.error', { ns: 'Generic' }), description: t('errorLoadingCompany') });
         } finally {
           setCompanyDataLoading(false);
         }
@@ -140,14 +142,14 @@ export default function ProfilePage() {
                  plan: 'Basic', // Default plan or fetch existing if possible
                  createdAt: new Date(),
              });
-             console.warn("Company document didn't exist, created one.");
-        }
+            console.warn(t('companyCreatedWarning'));
+       }
 
 
-      toast({ title: 'Profile Updated', description: 'Company information saved successfully.' });
-    } catch (error: any) {
-      console.error('Error updating company profile:', error);
-      toast({ variant: 'destructive', title: 'Update Failed', description: error.message });
+     toast({ title: t('profileUpdateSuccess'), description: t('profileUpdateSuccessDesc') });
+   } catch (error: any) {
+     console.error('Error updating company profile:', error);
+     toast({ variant: 'destructive', title: t('updateFailedTitle'), description: error.message });
     } finally {
       setIsUpdatingCompany(false);
     }
@@ -156,7 +158,7 @@ export default function ProfilePage() {
 
    const onPasswordSubmit = async (values: PasswordFormValues) => {
     if (!user || !user.email) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User not found or email missing.' });
+        toast({ variant: 'destructive', title: t('Generic.error', { ns: 'Generic' }), description: t('userNotFoundError') });
         return;
     }
     setIsUpdatingPassword(true);
@@ -169,24 +171,23 @@ export default function ProfilePage() {
       // If re-authentication is successful, update the password
       await updatePassword(user, values.newPassword);
 
-      toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
+      toast({ title: t('passwordUpdateSuccess'), description: t('passwordUpdateSuccessDesc') });
       passwordForm.reset(); // Clear the form
       setShowPasswordDialog(false); // Close the dialog
 
     } catch (error: any) {
       console.error('Error updating password:', error);
-      let description = 'Failed to update password. Please try again.';
+      let description = t('passwordUpdateFailedGeneric'); // Default generic message
       if (error.code === 'auth/wrong-password') {
-        description = 'Incorrect current password.';
-        // Set error on the currentPassword field
+        description = t('incorrectPasswordError');
         passwordForm.setError('currentPassword', { type: 'manual', message: description });
       } else if (error.code === 'auth/weak-password') {
-        description = 'The new password is too weak.';
+        description = t('weakPasswordError');
          passwordForm.setError('newPassword', { type: 'manual', message: description });
-      } else {
-        description = error.message; // General error
+      } else if (error.message) {
+        description = error.message; // Use Firebase error message if available and not handled above
       }
-      toast({ variant: 'destructive', title: 'Password Update Failed', description });
+      toast({ variant: 'destructive', title: t('passwordUpdateFailed'), description });
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -201,13 +202,13 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold">Profile & Settings</h1>
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
       {/* Company Information Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Company Information</CardTitle>
-          <CardDescription>Update your company's details and logo.</CardDescription>
+          <CardTitle>{t('companyInfoCardTitle')}</CardTitle>
+          <CardDescription>{t('companyInfoCardDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -236,9 +237,9 @@ export default function ProfilePage() {
                        name="logoUrl"
                        render={({ field }) => (
                          <FormItem className="flex-1">
-                           <FormLabel>Logo URL</FormLabel>
+                           <FormLabel>{t('logoUrlLabel')}</FormLabel>
                            <FormControl>
-                              <Input placeholder="https://example.com/logo.png" {...field} />
+                              <Input placeholder={t('logoUrlPlaceholder')} {...field} />
                            </FormControl>
                            <FormMessage />
                          </FormItem>
@@ -252,7 +253,7 @@ export default function ProfilePage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Name</FormLabel>
+                      <FormLabel>{t('companyNameLabel')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -265,16 +266,16 @@ export default function ProfilePage() {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Address</FormLabel>
+                      <FormLabel>{t('companyAddressLabel')}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="123 Main St, Anytown, USA" {...field} />
+                        <Textarea placeholder={t('companyAddressPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" disabled={isUpdatingCompany}>
-                  {isUpdatingCompany ? 'Saving...' : 'Save Company Info'}
+                  {isUpdatingCompany ? t('savingCompanyButton') : t('saveCompanyButton')}
                 </Button>
               </form>
             </Form>
@@ -285,32 +286,32 @@ export default function ProfilePage() {
       {/* Account Settings Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-          <CardDescription>Manage your login and security preferences.</CardDescription>
+          <CardTitle>{t('accountSettingsCardTitle')}</CardTitle>
+          <CardDescription>{t('accountSettingsCardDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
            {isLoading ? (
                <Skeleton className="h-8 w-full" />
            ) : (
-                <div>
-                    <Label>Email</Label>
-                    <Input value={user?.email || ''} disabled />
-                    <p className="text-sm text-muted-foreground mt-1">Email cannot be changed directly. Contact support if needed.</p>
-                </div>
-           )}
+                 <div>
+                     <Label>{t('emailLabel')}</Label>
+                     <Input value={user?.email || ''} disabled />
+                     <p className="text-sm text-muted-foreground mt-1">{t('emailChangeNotice')}</p>
+                 </div>
+            )}
 
             {/* Change Password */}
             <AlertDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
                 <AlertDialogTrigger asChild>
                     <Button variant="outline">
-                        <KeyRound className="mr-2 h-4 w-4" /> Change Password
+                        <KeyRound className="mr-2 h-4 w-4" /> {t('changePasswordButton')}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Change Your Password</AlertDialogTitle>
+                    <AlertDialogTitle>{t('passwordDialogTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Enter your current password and your new password below.
+                        {t('passwordDialogDescription')}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <Form {...passwordForm}>
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                                 name="currentPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Current Password</FormLabel>
+                                    <FormLabel>{t('currentPasswordLabel')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" {...field} />
                                     </FormControl>
@@ -333,7 +334,7 @@ export default function ProfilePage() {
                                 name="newPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>New Password</FormLabel>
+                                    <FormLabel>{t('newPasswordLabel')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" {...field} />
                                     </FormControl>
@@ -346,7 +347,7 @@ export default function ProfilePage() {
                                 name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Confirm New Password</FormLabel>
+                                    <FormLabel>{t('confirmPasswordLabel')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" {...field} />
                                     </FormControl>
@@ -357,10 +358,10 @@ export default function ProfilePage() {
                          </form>
                      </Form>
                     <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isUpdatingPassword}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isUpdatingPassword}>{t('cancelButton')}</AlertDialogCancel>
                      {/* The action button needs to trigger the form submission */}
                      <Button type="submit" form="password-change-form" disabled={isUpdatingPassword}>
-                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                        {isUpdatingPassword ? t('updatingPasswordButton') : t('updatePasswordButton')}
                     </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -369,11 +370,11 @@ export default function ProfilePage() {
 
           {/* MFA Placeholder */}
           <div>
-            <Label>Multi-Factor Authentication (MFA)</Label>
+            <Label>{t('mfaLabel')}</Label>
             <Button variant="outline" disabled className="w-full mt-1 justify-start">
-                Enable MFA (Coming Soon)
+                {t('mfaButton')}
             </Button>
-             <p className="text-sm text-muted-foreground mt-1">Enhance your account security.</p>
+             <p className="text-sm text-muted-foreground mt-1">{t('mfaDescription')}</p>
           </div>
         </CardContent>
          {/* <CardFooter>

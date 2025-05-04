@@ -1,8 +1,8 @@
 'use client';
 
-import React, {useState} from 'react';
+import React from 'react'; // Removed useState
 import {Card, CardHeader, CardTitle, CardContent, CardDescription} from '@/components/ui/card';
-import {Input} from '@/components/ui/input';
+// Input is not used, removed import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Button} from '@/components/ui/button';
 import {Separator} from '@/components/ui/separator';
@@ -15,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {useToast} from '@/hooks/use-toast'; // Import useToast
-import {useTheme} from 'next-themes'; // Import useTheme from next-themes
+import {useToast} from '@/hooks/use-toast';
+import {useTheme} from 'next-themes';
+import {useTranslations, useLocale} from 'next-intl'; // Import translation hooks
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,72 +31,94 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function SettingsPage() {
-  const {toast} = useToast(); // Initialize toast
-  const {theme, setTheme} = useTheme(); // Initialize theme
-  const [language, setLanguage] = useState('en');
+  const t = useTranslations('SettingsPage');
+  const {toast} = useToast();
+  const {theme, setTheme} = useTheme();
+  const locale = useLocale(); // Get current locale ('en' by default from layout)
 
-  // Placeholder state and handlers - replace with actual logic
+  // --- Placeholder Handlers ---
+  // These handlers now use translated strings for toasts
   const handleExport = () => {
-    // TODO: Implement actual data export logic (e.g., fetch contacts, generate CSV, trigger download)
-    toast({title: 'Export Initiated', description: 'Your contact data will be downloaded shortly. (Not Implemented)'});
-    // In real implementation, trigger download here
+    toast({title: t('exportInitiated'), description: t('exportDescription')});
   };
 
   const handleImport = () => {
-    // TODO: Implement actual data import logic
-    toast({title: 'Import Initiated', description: 'Import functionality is coming soon.'});
+    // For the alert dialog, we need to translate its content too
+    // This requires passing `t` or using a separate component
+    // For simplicity, keeping the toast for now.
+    toast({title: t('importInitiated'), description: t('importDescription')});
   };
 
   const handleAuditLogs = () => {
-    // TODO: Implement actual audit log viewing
-    toast({title: 'Audit Logs', description: 'Audit logs are coming soon.'});
+    toast({title: t('auditLogs'), description: t('auditLogsDescription')});
   };
 
   const handleAddCustomField = () => {
-    // TODO: Implement actual custom field creation
-    toast({title: 'Custom Fields', description: 'Custom field creation is coming soon.'});
+    toast({title: t('customFields'), description: t('customFieldsDescription')});
   };
+
+ const handleLanguageChange = (newLocale: string) => {
+    // Set the locale cookie for server-side rendering
+    // Expires in ~1 year
+    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; expires=${expires}; SameSite=Lax`;
+
+    // Store the selected locale in localStorage (optional, for client-side checks if needed)
+    localStorage.setItem('locale', newLocale);
+
+    // Reload the page to apply the new locale globally
+    // Note: This is a simple approach. A more seamless UX would involve
+    // dynamic message loading without a full page reload, potentially using
+    // global state management or server actions to update the locale cookie.
+    window.location.reload();
+
+    // We might not see this toast due to the immediate reload
+    toast({
+      title: t('languageChangeTitle', {defaultValue: 'Language Change Initiated'}), // Add default value if key missing
+      description: t('languageChangeDescription', {locale: newLocale, defaultValue: `Switching language to ${newLocale}...`}),
+    });
+  };
+  // --- End Placeholder Handlers ---
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold">Settings</h1>
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">
             <UserCog className="mr-2 h-4 w-4" />
-            Profile
+            {t('profileTab')}
           </TabsTrigger>
           <TabsTrigger value="data">
             <Database className="mr-2 h-4 w-4" />
-            Data Mgmt
+            {t('dataManagementTab')}
           </TabsTrigger>
           <TabsTrigger value="appearance">
             <Palette className="mr-2 h-4 w-4" />
-            Appearance
+            {t('appearanceTab')}
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <Bell className="mr-2 h-4 w-4" />
-            Notifications
+            {t('notificationsTab')}
           </TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab (already exists as /profile, link or duplicate basic info?) */}
+        {/* Profile Tab */}
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Settings</CardTitle>
-              <CardDescription>Manage your personal and company information.</CardDescription>
+              <CardTitle>{t('profileSettings')}</CardTitle>
+              <CardDescription>{t('profileDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p>
-                Your primary profile settings are managed on the{' '}
+                {t('profileContent')}{' '}
                 <a href="/profile" className="text-primary underline">
-                  Profile page
+                  {t('profileLink')}
                 </a>
                 .
               </p>
-              {/* Optionally include some quick links or basic settings here */}
             </CardContent>
           </Card>
         </TabsContent>
@@ -104,23 +127,22 @@ export default function SettingsPage() {
         <TabsContent value="data">
           <Card>
             <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>Configure contact fields and manage data import/export.</CardDescription>
+              <CardTitle>{t('dataManagement')}</CardTitle>
+              <CardDescription>{t('dataDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Custom Fields Configuration */}
               <div className="space-y-2">
-                <h3 className="font-medium">Custom Contact Fields</h3>
+                <h3 className="font-medium">{t('customFieldsTitle')}</h3>
+                {/* Description for custom fields not in JSON, keeping English for now */}
                 <p className="text-sm text-muted-foreground">
                   Define additional fields for your contact records. Use the drag-and-drop interface to reorder.
                 </p>
-                {/* Placeholder for drag-and-drop interface */}
                 <div className="p-4 border rounded-lg min-h-[150px] bg-muted flex items-center justify-center">
-                  <p className="text-muted-foreground">Custom Field Configuration (Coming Soon)</p>
-                  {/* Map through existing fields, add button to create new */}
+                  <p className="text-muted-foreground">{t('customFieldsComingSoon')}</p>
                 </div>
                 <Button variant="outline" disabled onClick={handleAddCustomField}>
-                  Add Custom Field
+                  {t('addCustomFieldButton')}
                 </Button>
               </div>
 
@@ -128,37 +150,42 @@ export default function SettingsPage() {
 
               {/* Data Import/Export */}
               <div className="space-y-2">
-                <h3 className="font-medium">Data Import/Export</h3>
-                <p className="text-sm text-muted-foreground">Import contacts from CSV or export your data.</p>
+                <h3 className="font-medium">{t('dataImportExportTitle')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dataImportExportDescription')}</p>
                 <div className="flex gap-2">
+                  {/* Alert Dialog for Import */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline">Import Contacts (CSV)</Button>
+                      <Button variant="outline">{t('importContactsButton')}</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Import Contacts</AlertDialogTitle>
-                        <AlertDialogDescription>This feature is coming soon. Please check back later.</AlertDialogDescription>
+                        {/* Using key from NewContactPage temporarily as it's not in SettingsPage */}
+                        <AlertDialogTitle>{t('importContactsAlertTitle')}</AlertDialogTitle>
+                        <AlertDialogDescription>{t('importContactsAlertDescription')}</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>OK</AlertDialogCancel>
+                        {/* Using the okButton key from SettingsPage namespace */}
+                        <AlertDialogCancel>{t('okButton')}</AlertDialogCancel>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  {/* Export Button */}
                   <Button variant="outline" onClick={handleExport}>
-                    <Download className="mr-2 h-4 w-4" /> Export All Contacts (Excel)
+                    <Download className="mr-2 h-4 w-4" /> {t('exportContactsButton')}
                   </Button>
                 </div>
               </div>
 
               <Separator />
 
-              {/* Audit Logs Placeholder */}
+              {/* Audit Logs */}
               <div className="space-y-2">
-                <h3 className="font-medium">Audit Logs</h3>
+                <h3 className="font-medium">{t('auditLogsTitle')}</h3>
+                 {/* Description for audit logs not in JSON, keeping English for now */}
                 <p className="text-sm text-muted-foreground">Track critical actions performed within your account. (Coming Soon)</p>
                 <Button variant="outline" disabled onClick={handleAuditLogs}>
-                  View Audit Logs
+                  {t('viewAuditLogsButton')}
                 </Button>
               </div>
             </CardContent>
@@ -169,35 +196,34 @@ export default function SettingsPage() {
         <TabsContent value="appearance">
           <Card>
             <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>Customize the look and feel of the application.</CardDescription>
+              <CardTitle>{t('appearanceTitle')}</CardTitle>
+              <CardDescription>{t('appearanceDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Theme selection could go here (Light/Dark/System) */}
+              {/* Theme Selection */}
               <div>
-                <Label>Theme</Label>
+                <Label>{t('themeLabel')}</Label>
                 <Select onValueChange={setTheme} defaultValue={theme || 'system'}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select theme" />
+                    <SelectValue placeholder={t('selectTheme')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="light">{t('lightTheme')}</SelectItem>
+                    <SelectItem value="dark">{t('darkTheme')}</SelectItem>
+                    <SelectItem value="system">{t('systemTheme')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {/* Language Selection */}
               <div>
-                <Label>Language</Label>
-                <Select defaultValue={language} onValueChange={setLanguage}>
+                <Label>{t('languageLabel')}</Label>
+                <Select defaultValue={locale} onValueChange={handleLanguageChange}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t('selectLanguage')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English (EN)</SelectItem>
-                    <SelectItem value="fr" disabled>
-                      French (FR) (Coming Soon)
-                    </SelectItem>
+                    <SelectItem value="en">{t('english')}</SelectItem>
+                    <SelectItem value="fr">{t('french')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -209,12 +235,11 @@ export default function SettingsPage() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Manage how you receive notifications.</CardDescription>
+              <CardTitle>{t('notificationsTitle')}</CardTitle>
+              <CardDescription>{t('notificationsDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Notification settings (e.g., email digests, in-app alerts) will be available here soon.</p>
-              {/* Add notification toggles */}
+              <p className="text-muted-foreground">{t('notificationsComingSoon')}</p>
             </CardContent>
           </Card>
         </TabsContent>

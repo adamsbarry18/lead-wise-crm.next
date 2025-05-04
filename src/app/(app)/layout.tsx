@@ -12,7 +12,8 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import Image from 'next/image'; // Use next/image for logo
+import Image from 'next/image';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 
 
 export default function AppLayout({
@@ -23,6 +24,7 @@ export default function AppLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations('AppLayout'); // Initialize translations
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -38,14 +40,14 @@ export default function AppLayout({
    const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+      toast({ title: t('logoutSuccessTitle'), description: t('logoutSuccessDescription') });
       router.push('/login');
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
         variant: 'destructive',
-        title: 'Logout Failed',
-        description: error.message || 'Could not log you out. Please try again.',
+        title: t('logoutFailedTitle'),
+        description: error.message || t('logoutFailedDescription'),
       });
     }
   };
@@ -75,33 +77,33 @@ export default function AppLayout({
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-primary">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
              </svg>
-            <span className="group-data-[collapsible=icon]:hidden">LeadWise</span>
+            <span className="group-data-[collapsible=icon]:hidden">{t('appName')}</span>
           </Link>
           {/* Trigger is usually outside the sidebar in the main content header */}
         </SidebarHeader>
         <SidebarContent className="flex-1 overflow-y-auto">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard">
+              <SidebarMenuButton asChild tooltip={t('dashboardTooltip')}>
                 <Link href="/dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>{t('dashboardLabel')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Contacts">
+              <SidebarMenuButton asChild tooltip={t('contactsTooltip')}>
                 <Link href="/contacts">
                   <Users />
-                  <span>Contacts</span>
+                  <span>{t('contactsLabel')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Analytics">
+              <SidebarMenuButton asChild tooltip={t('analyticsTooltip')}>
                 <Link href="/analytics">
                   <BarChart />
-                  <span>Analytics</span>
+                  <span>{t('analyticsLabel')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -111,18 +113,18 @@ export default function AppLayout({
         <SidebarFooter className="p-2 border-t border-sidebar-border">
            <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Support">
+                <SidebarMenuButton asChild tooltip={t('supportTooltip')}>
                   <Link href="/support">
                     <LifeBuoy />
-                    <span>Support</span>
+                    <span>{t('supportLabel')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Settings">
+                <SidebarMenuButton asChild tooltip={t('settingsTooltip')}>
                   <Link href="/settings">
                     <Settings />
-                    <span>Settings</span>
+                    <span>{t('settingsLabel')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -145,18 +147,18 @@ export default function AppLayout({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t('accountMenuLabel')}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
+                            <Link href="/profile"><User className="mr-2 h-4 w-4" />{t('profileLink')}</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                           <Link href="/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link>
+                           <Link href="/settings"><Settings className="mr-2 h-4 w-4" />{t('settingsLink')}</Link>
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
                          <DropdownMenuItem onClick={handleLogout}>
                            <LogOut className="mr-2 h-4 w-4" />
-                           Logout
+                           {t('logoutButton')}
                          </DropdownMenuItem>
                     </DropdownMenuContent>
                  </DropdownMenu>

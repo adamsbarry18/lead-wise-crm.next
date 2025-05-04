@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { MailQuestion } from 'lucide-react';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -24,6 +25,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
+  const t = useTranslations('ForgotPasswordPage'); // Initialize useTranslations
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -38,16 +40,16 @@ export default function ForgotPasswordPage() {
     try {
       await sendPasswordResetEmail(auth, values.email);
       toast({
-        title: 'Password Reset Email Sent',
-        description: 'Check your inbox for instructions to reset your password.',
+        title: t('resetEmailSentTitle'),
+        description: t('resetEmailSentDescription'),
       });
       setEmailSent(true); // Indicate that the email was sent
     } catch (error: any) {
       console.error("Password reset error:", error);
       toast({
         variant: 'destructive',
-        title: 'Password Reset Failed',
-        description: error.message || 'Could not send reset email. Please check the address and try again.',
+        title: t('resetFailedTitle'),
+        description: error.message || t('resetFailedDescription'),
       });
     } finally {
       setLoading(false);
@@ -59,18 +61,18 @@ export default function ForgotPasswordPage() {
       <div className="flex flex-col items-center text-center space-y-2 mb-6">
         <MailQuestion className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-semibold tracking-tight">
-          Forgot Your Password?
+          {t('title')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email address below and we'll send you a link to reset your password.
+          {t('description')}
         </p>
       </div>
 
       {emailSent ? (
         <div className="text-center space-y-4">
-            <p className="text-green-600">An email has been sent to <span className="font-medium">{form.getValues('email')}</span> with password reset instructions.</p>
+            <p className="text-green-600">{t('emailSentSuccess', { email: form.getValues('email') })}</p>
              <Button variant="outline" asChild>
-                 <Link href="/login">Back to Login</Link>
+                 <Link href="/login">{t('backToLoginButton')}</Link>
              </Button>
         </div>
       ) : (
@@ -81,16 +83,16 @@ export default function ForgotPasswordPage() {
                 name="email"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>{t('emailLabel')}</FormLabel>
                     <FormControl>
-                    <Input type="email" placeholder="your.email@company.com" {...field} />
+                    <Input type="email" placeholder={t('emailPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
                 )}
             />
             <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? t('loadingButton') : t('sendButton')}
             </Button>
             </form>
         </Form>
@@ -98,9 +100,9 @@ export default function ForgotPasswordPage() {
 
       {!emailSent && (
         <p className="mt-4 text-center text-sm text-muted-foreground">
-            Remember your password?{' '}
+            {t('rememberPasswordPrompt')}{' '}
             <Link href="/login" className="underline text-primary hover:text-primary/90">
-            Login
+            {t('loginLink')}
             </Link>
         </p>
       )}

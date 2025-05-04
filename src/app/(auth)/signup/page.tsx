@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import * as z from 'zod';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
@@ -40,6 +41,7 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
+  const t = useTranslations('SignupPage'); // Initialize translations
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -89,21 +91,23 @@ export default function SignupPage() {
 
 
       toast({
-        title: 'Account Created Successfully!',
-        description: 'Please check your email to verify your account before logging in.',
+        title: t('signupSuccessTitle'),
+        description: t('signupSuccessDescription'),
       });
       router.push('/login'); // Redirect to login page after signup
     } catch (error: any) {
       console.error("Signup error:", error);
-      let errorMessage = 'An unexpected error occurred.';
+      let errorMessage = t('Generic.unexpectedError', { ns: 'Generic' }); // Use generic unexpected error
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email address is already in use.';
+        errorMessage = t('emailInUseError');
       } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'The password is too weak.';
+        errorMessage = t('weakPasswordError');
+      } else if (error.message) {
+        errorMessage = error.message; // Use Firebase error message if available and not handled above
       }
       toast({
         variant: 'destructive',
-        title: 'Signup Failed',
+        title: t('signupFailedTitle'),
         description: errorMessage,
       });
     } finally {
@@ -116,10 +120,10 @@ export default function SignupPage() {
       <div className="flex flex-col items-center text-center space-y-2 mb-6">
         <UserPlus className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-semibold tracking-tight">
-          Create your LeadWise CRM Account
+          {t('title')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your details below to get started.
+          {t('description')}
         </p>
       </div>
       <Form {...form}>
@@ -129,9 +133,9 @@ export default function SignupPage() {
             name="companyName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company Name</FormLabel>
+                <FormLabel>{t('companyNameLabel')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Acme Inc." {...field} />
+                  <Input placeholder={t('companyNamePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,9 +146,9 @@ export default function SignupPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('emailLabel')}</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="your.email@company.com" {...field} />
+                  <Input type="email" placeholder={t('emailPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -155,9 +159,9 @@ export default function SignupPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t('passwordLabel')}</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder={t('passwordPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -168,17 +172,17 @@ export default function SignupPage() {
             name="plan"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Choose Plan</FormLabel>
+                <FormLabel>{t('planLabel')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a plan" />
+                      <SelectValue placeholder={t('planPlaceholder')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Basic">Basic</SelectItem>
-                    <SelectItem value="Pro">Pro</SelectItem>
-                    <SelectItem value="Business">Business</SelectItem>
+                    <SelectItem value="Basic">{t('basicPlan')}</SelectItem>
+                    <SelectItem value="Pro">{t('proPlan')}</SelectItem>
+                    <SelectItem value="Business">{t('businessPlan')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -186,14 +190,14 @@ export default function SignupPage() {
             )}
           />
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? t('loadingButton') : t('signupButton')}
           </Button>
         </form>
       </Form>
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
+        {t('loginPrompt')}{' '}
         <Link href="/login" className="underline text-primary hover:text-primary/90">
-          Login
+          {t('loginLink')}
         </Link>
       </p>
     </>

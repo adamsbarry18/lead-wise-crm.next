@@ -3,6 +3,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Users, TrendingUp, Mail, Phone, Calendar, CheckSquare } from 'lucide-react';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
 import { ChartTooltipContent } from "@/components/ui/chart"; // Import ChartTooltipContent
 import { ChartContainer } from "@/components/ui/chart"; // Import ChartContainer
@@ -28,42 +29,50 @@ const performanceData = [
 
 
 export default function DashboardPage() {
+  const t = useTranslations('DashboardPage');
   // TODO: Fetch actual data from Firebase
+
+  // Mock task data (consider translating these if they become dynamic)
+  const tasks = [
+    { id: 1, text: 'Follow up with Acme Corp', icon: CheckSquare, color: 'text-primary' },
+    { id: 2, text: 'Schedule demo for Beta Industries', icon: Calendar, color: 'text-blue-500' },
+    { id: 3, text: 'Send proposal to Gamma Solutions', icon: Mail, color: 'text-green-500' },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
       {/* Global Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalContactsCardTitle')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalContacts}</div>
-            <p className="text-xs text-muted-foreground">All contacts in the system</p>
+            <p className="text-xs text-muted-foreground">{t('totalContactsCardDescription')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Leads (Last 30d)</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" /> {/* Using Users again, consider a more specific icon if available */}
+            <CardTitle className="text-sm font-medium">{t('newLeadsCardTitle')}</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{newLeads}</div>
-            <p className="text-xs text-muted-foreground">Recently added prospects</p>
+            <p className="text-xs text-muted-foreground">{t('newLeadsCardDescription')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate (Avg)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('conversionRateCardTitle')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{conversionRate}%</div>
-            <p className="text-xs text-muted-foreground">From lead to customer</p>
+            <p className="text-xs text-muted-foreground">{t('conversionRateCardDescription')}</p>
           </CardContent>
         </Card>
       </div>
@@ -72,8 +81,8 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Activity Overview (Last 30 days)</CardTitle>
-            <CardDescription>Summary of key sales activities.</CardDescription>
+            <CardTitle>{t('activityOverviewCardTitle')}</CardTitle>
+            <CardDescription>{t('activityOverviewCardDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ChartContainer config={{ activity: {} }}>
@@ -84,7 +93,7 @@ export default function DashboardPage() {
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                   <Tooltip
                     cursor={{ fill: 'hsl(var(--muted))', radius: 4 }}
-                    content={<ChartTooltipContent hideLabel />} // Use ShadCN tooltip
+                    content={<ChartTooltipContent hideLabel />}
                   />
                   <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -95,8 +104,8 @@ export default function DashboardPage() {
 
         <Card>
            <CardHeader>
-             <CardTitle>Performance Trend (Last 4 Weeks)</CardTitle>
-             <CardDescription>Activity volume over time.</CardDescription>
+             <CardTitle>{t('performanceTrendCardTitle')}</CardTitle>
+             <CardDescription>{t('performanceTrendCardDescription')}</CardDescription>
            </CardHeader>
            <CardContent className="h-[300px]">
              <ChartContainer config={{ performance: {} }}>
@@ -107,12 +116,13 @@ export default function DashboardPage() {
                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                    <Tooltip
                       cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1.5 }}
-                      content={<ChartTooltipContent indicator="line" />} // Use ShadCN tooltip
+                      content={<ChartTooltipContent indicator="line" />}
                    />
+                   {/* Consider translating series names if needed */}
                    <Line type="monotone" dataKey="sent" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} name="Emails Sent" />
                    <Line type="monotone" dataKey="calls" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} name="Calls Made" />
                    <Line type="monotone" dataKey="meetings" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} name="Meetings" />
-                    <Line type="monotone" dataKey="tasks" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} name="Tasks Completed" />
+                   <Line type="monotone" dataKey="tasks" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} name="Tasks Completed" />
                  </LineChart>
                </ResponsiveContainer>
              </ChartContainer>
@@ -120,20 +130,23 @@ export default function DashboardPage() {
          </Card>
       </div>
 
-      {/* Recent Activity Feed or Task List (Placeholder) */}
+      {/* Upcoming Tasks */}
        <Card>
          <CardHeader>
-           <CardTitle>Upcoming Tasks</CardTitle>
-            <CardDescription>Your immediate follow-ups and actions.</CardDescription>
+           <CardTitle>{t('upcomingTasksCardTitle')}</CardTitle>
+            <CardDescription>{t('upcomingTasksCardDescription')}</CardDescription>
          </CardHeader>
          <CardContent>
            {/* Placeholder content - Replace with actual task list */}
            <ul className="space-y-2">
-             <li className="flex items-center gap-2 text-sm"> <CheckSquare className="h-4 w-4 text-primary"/> Follow up with Acme Corp</li>
-             <li className="flex items-center gap-2 text-sm"> <Calendar className="h-4 w-4 text-blue-500"/> Schedule demo for Beta Industries</li>
-             <li className="flex items-center gap-2 text-sm"> <Mail className="h-4 w-4 text-green-500"/> Send proposal to Gamma Solutions</li>
+             {tasks.map(task => (
+               <li key={task.id} className="flex items-center gap-2 text-sm">
+                 <task.icon className={`h-4 w-4 ${task.color}`} />
+                 {task.text} {/* Note: Task text is currently hardcoded */}
+               </li>
+             ))}
            </ul>
-           <p className="text-sm text-muted-foreground mt-4">More tasks...</p>
+           <p className="text-sm text-muted-foreground mt-4">{t('moreTasks')}</p>
          </CardContent>
        </Card>
 

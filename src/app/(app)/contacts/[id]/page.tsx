@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -45,6 +46,9 @@ export default function ContactDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const t = useTranslations('ContactDetailPage'); // Initialize translations
+  const tGeneric = useTranslations('Generic'); // Initialize generic translations
+  const tContacts = useTranslations('ContactsPage'); // For shared keys like strategy generation
   const contactId = params.id as string;
 
   const [strategySheetOpen, setStrategySheetOpen] = useState(false);
@@ -72,7 +76,7 @@ export default function ContactDetailPage() {
   // --- Mutations ---
    const updateScoreMutation = useMutation({
      mutationFn: async ({ score, justification }: { score: number, justification: string }) => {
-       if (!user || !contactId) throw new Error("Missing user or contact ID");
+       if (!user || !contactId) throw new Error(tGeneric('unexpectedError')); // Use generic error
        const companyId = user.uid;
        const contactRef = doc(db, 'companies', companyId, 'contacts', contactId);
        await updateDoc(contactRef, {
@@ -85,28 +89,28 @@ export default function ContactDetailPage() {
      onSuccess: (data) => {
        queryClient.invalidateQueries({ queryKey: ['contact', contactId, user?.uid] });
        queryClient.invalidateQueries({ queryKey: ['contacts', user?.uid] }); // Invalidate list view too
-       toast({ title: "Score Updated", description: `Contact score set to ${data.score}.` });
+       toast({ title: t('scoreUpdatedTitle'), description: t('scoreUpdatedDescription', { score: data.score }) });
      },
      onError: (error: any) => {
-       toast({ variant: 'destructive', title: "Scoring Failed", description: error.message });
+       toast({ variant: 'destructive', title: t('scoringFailedTitle'), description: error.message || tGeneric('unexpectedError') });
      },
      onSettled: () => setIsScoring(false)
    });
 
     const deleteContactMutation = useMutation({
         mutationFn: async () => {
-        if (!user || !contactId) throw new Error("Missing user or contact ID");
+        if (!user || !contactId) throw new Error(tGeneric('unexpectedError')); // Use generic error
         const companyId = user.uid;
         const contactRef = doc(db, 'companies', companyId, 'contacts', contactId);
         await deleteDoc(contactRef);
         },
         onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['contacts', user?.uid] });
-        toast({ title: "Contact Deleted", description: "The contact has been removed." });
+        toast({ title: t('deleteSuccessTitle'), description: t('deleteSuccessDescription') });
         router.push('/contacts'); // Redirect after deletion
         },
         onError: (error: any) => {
-        toast({ variant: 'destructive', title: "Deletion Failed", description: error.message });
+        toast({ variant: 'destructive', title: t('deleteFailedTitle'), description: error.message || tGeneric('unexpectedError') });
         },
          onSettled: () => setShowDeleteConfirm(false)
     });
@@ -118,20 +122,20 @@ export default function ContactDetailPage() {
      setIsScoring(true);
      try {
        const scoreInput = {
-         engagement: contact.lastCommunicationMethod || 'N/A',
-         exchanges: contact.communicationSummary || 'No summary available.',
-         history: `Last contacted: ${contact.lastCommunicationDate ? format(new Date(contact.lastCommunicationDate.seconds * 1000), 'PPP') : 'N/A'}`,
-         otherCriteria: `Type: ${contact.type}, Tags: ${contact.tags?.join(', ') || 'None'}`,
+         engagement: contact.lastCommunicationMethod || tGeneric('na'),
+         exchanges: contact.communicationSummary || t('noCommSummary'),
+         history: `${t('lastContactedLabel')} ${contact.lastCommunicationDate ? format(new Date(contact.lastCommunicationDate.seconds * 1000), 'PPP') : tGeneric('na')}`,
+         otherCriteria: `${tContacts('columnType')}: ${contact.type}, ${tContacts('columnTags')}: ${contact.tags?.join(', ') || tContacts('tagsNone')}`,
        };
        const result = await scoreLead(scoreInput);
        if (result && typeof result.score === 'number') {
          await updateScoreMutation.mutateAsync({ score: result.score, justification: result.justification });
        } else {
-         throw new Error("Invalid scoring response from AI.");
+         throw new Error(tContacts('invalidScoringResponse'));
        }
      } catch (error: any) {
        console.error("Scoring error:", error);
-       toast({ variant: 'destructive', title: "Scoring Failed", description: error.message || "Could not score contact." });
+       toast({ variant: 'destructive', title: t('scoringFailedTitle'), description: error.message || tContacts('scoringFailedDefaultDescription') });
         setIsScoring(false); // Ensure loading state is reset on error
      }
    };
@@ -143,17 +147,17 @@ export default function ContactDetailPage() {
      setStrategyResult(null);
      try {
        const strategyInput = {
-         contactSummary: contact.communicationSummary || 'No communication summary available.',
+         contactSummary: contact.communicationSummary || t('noCommSummary'),
        };
        const result = await generateSalesStrategyForContact(strategyInput);
        if (result && result.salesStrategy) {
          setStrategyResult(result.salesStrategy);
        } else {
-            throw new Error("Invalid strategy response from AI.");
+            throw new Error(tContacts('invalidStrategyResponse'));
        }
      } catch (error: any) {
         console.error("Strategy generation error:", error);
-        toast({ variant: 'destructive', title: "Strategy Generation Failed", description: error.message || "Could not generate strategy." });
+        toast({ variant: 'destructive', title: t('strategyFailedTitle'), description: error.message || tContacts('strategyFailed') });
      } finally {
        setIsGeneratingStrategy(false);
      }
@@ -182,21 +186,21 @@ export default function ContactDetailPage() {
   }
 
   if (error) {
-    return <p className="text-red-500 text-center">Error loading contact: {(error as Error).message}</p>;
+    return <p className="text-red-500 text-center">{tGeneric('error')}: {(error as Error).message || tGeneric('unexpectedError')}</p>;
   }
 
   if (!contact) {
     return (
         <div className="text-center py-10">
-            <p className="text-muted-foreground mb-4">Contact not found.</p>
+            <p className="text-muted-foreground mb-4">{t('contactNotFound')}</p>
             <Button variant="outline" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t('goBackButton')}
             </Button>
         </div>
         );
   }
 
-   const displayValue = (value: any, fallback = 'N/A') => {
+   const displayValue = (value: any, fallback = tGeneric('na')) => { // Use tGeneric('na') as default fallback
      if (value === undefined || value === null || value === '') return fallback;
      if (value instanceof Date) return format(value, 'PPP');
      // Handle Firestore Timestamp
@@ -216,30 +220,29 @@ export default function ContactDetailPage() {
          </Button>
         <div className="flex items-center gap-2">
            <Button variant="outline" onClick={() => router.push(`/contacts/edit/${contact.id}`)}>
-             <Edit className="mr-2 h-4 w-4" /> Edit
+             <Edit className="mr-2 h-4 w-4" /> {t('editButton')}
            </Button>
             <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        <Trash2 className="mr-2 h-4 w-4" /> {t('deleteButton')}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the contact
-                        <span className="font-semibold"> {contact.name}</span>.
+                        {t('deleteConfirmDescription', { name: contact.name })}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel disabled={deleteContactMutation.isPending}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={deleteContactMutation.isPending}>{t('cancelDelete')}</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={handleDeleteConfirm}
                         disabled={deleteContactMutation.isPending}
                         className="bg-destructive hover:bg-destructive/90"
                     >
-                         {deleteContactMutation.isPending ? 'Deleting...' : 'Yes, delete contact'}
+                         {deleteContactMutation.isPending ? t('deleting') : t('confirmDelete')}
                     </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -254,13 +257,13 @@ export default function ContactDetailPage() {
           <div className="flex items-center justify-between">
             <div>
                  <CardTitle className="text-2xl">{contact.name}</CardTitle>
-                 <CardDescription>{displayValue(contact.jobTitle, 'No job title')}</CardDescription>
+                 <CardDescription>{displayValue(contact.jobTitle, t('jobTitlePlaceholder'))}</CardDescription>
             </div>
              <div className="text-right">
                  <Badge variant={contact.score && contact.score > 70 ? 'default' : contact.score && contact.score > 40 ? 'secondary' : 'outline'} className={`text-lg ${contact.score && contact.score > 70 ? 'bg-green-500 hover:bg-green-600' : contact.score && contact.score > 40 ? 'bg-yellow-500 hover:bg-yellow-600' : ''}`}>
-                 {displayValue(contact.score, 'N/A')}
+                 {displayValue(contact.score)}
                  </Badge>
-                 <p className="text-xs text-muted-foreground">Lead Score</p>
+                 <p className="text-xs text-muted-foreground">{t('leadScoreLabel')}</p>
              </div>
           </div>
             <div className="flex flex-wrap gap-1 mt-2">
@@ -272,32 +275,32 @@ export default function ContactDetailPage() {
            <div className="flex items-start gap-2">
                 <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
-                    <span className="font-medium">Email:</span>{' '}
+                    <span className="font-medium">{t('emailLabel')}</span>{' '}
                     {contact.email ? <a href={`mailto:${contact.email}`} className="text-primary hover:underline">{contact.email}</a> : displayValue(contact.email)}
                 </div>
             </div>
              <div className="flex items-start gap-2">
                 <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                  <div>
-                    <span className="font-medium">Phone:</span>{' '}
+                    <span className="font-medium">{t('phoneLabel')}</span>{' '}
                     {contact.phone ? <a href={`tel:${contact.phone}`} className="text-primary hover:underline">{contact.phone}</a> : displayValue(contact.phone)}
                 </div>
             </div>
             <div className="flex items-start gap-2">
                 <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                <div><span className="font-medium">Last Contacted:</span> {displayValue(contact.lastCommunicationDate)}</div>
+                <div><span className="font-medium">{t('lastContactedLabel')}</span> {displayValue(contact.lastCommunicationDate)}</div>
             </div>
              <div className="flex items-start gap-2">
                 <MessageSquare className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                <div><span className="font-medium">Last Method:</span> {displayValue(contact.lastCommunicationMethod)}</div>
+                <div><span className="font-medium">{t('lastMethodLabel')}</span> {displayValue(contact.lastCommunicationMethod)}</div>
             </div>
              <div className="flex items-start gap-2">
                  {/* Consider an icon for timezone */}
-                <div><span className="font-medium">Timezone:</span> {displayValue(contact.timezone)}</div>
+                <div><span className="font-medium">{t('timezoneLabel')}</span> {displayValue(contact.timezone)}</div>
             </div>
              <div className="flex items-start gap-2">
                  {/* Consider an icon for agent */}
-                <div><span className="font-medium">Communicated By:</span> {displayValue(contact.communicatedBy)}</div>
+                <div><span className="font-medium">{t('commByLabel')}</span> {displayValue(contact.communicatedBy)}</div>
             </div>
              {/* Add other standard fields */}
         </CardContent>
@@ -306,16 +309,16 @@ export default function ContactDetailPage() {
         {/* Communication Summary Card */}
        <Card>
          <CardHeader>
-           <CardTitle>Communication Summary</CardTitle>
+           <CardTitle>{t('commSummaryTitle')}</CardTitle>
            {contact.lastScoredAt && (
                <CardDescription>
-                   Score justification (Last scored: {displayValue(contact.lastScoredAt)}): {displayValue(contact.scoreJustification, 'No justification provided.')}
+                   {t('scoreJustificationPrefix', { date: displayValue(contact.lastScoredAt) })} {displayValue(contact.scoreJustification, t('noJustification'))}
                </CardDescription>
            )}
          </CardHeader>
          <CardContent>
             <p className="text-sm whitespace-pre-wrap">
-                {displayValue(contact.communicationSummary, 'No communication summary available.')}
+                {displayValue(contact.communicationSummary, t('noCommSummary'))}
             </p>
             {/* Optionally, add timeline of interactions here */}
          </CardContent>
@@ -325,17 +328,17 @@ export default function ContactDetailPage() {
       {/* AI Actions Card */}
       <Card>
         <CardHeader>
-          <CardTitle>AI Assistant</CardTitle>
-          <CardDescription>Leverage AI for scoring and strategy.</CardDescription>
+          <CardTitle>{t('aiAssistantTitle')}</CardTitle>
+          <CardDescription>{t('aiAssistantDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
           <Button onClick={handleScoreContact} disabled={isScoring || updateScoreMutation.isPending} className="flex-1">
             {isScoring || updateScoreMutation.isPending ? <BrainCircuit className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-            {isScoring || updateScoreMutation.isPending ? 'Recalculating Score...' : 'Recalculate Score'}
+            {isScoring || updateScoreMutation.isPending ? t('recalculatingScoreButton') : t('recalculateScoreButton')}
           </Button>
           <Button onClick={handleGenerateStrategy} disabled={isGeneratingStrategy} className="flex-1">
             {isGeneratingStrategy ? <Zap className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-            {isGeneratingStrategy ? 'Generating Strategy...' : 'Generate Sales Strategy'}
+            {isGeneratingStrategy ? t('generatingStrategyButton') : t('generateStrategyButton')}
           </Button>
         </CardContent>
       </Card>
@@ -346,8 +349,8 @@ export default function ContactDetailPage() {
         <SheetContent className="w-[400px] sm:w-[540px]">
            <ScrollArea className="h-full pr-6">
              <SheetHeader>
-               <SheetTitle>Sales Strategy for {contact.name}</SheetTitle>
-               <SheetDescription>AI-generated recommendations.</SheetDescription>
+               <SheetTitle>{t('strategySheetTitle', { name: contact.name })}</SheetTitle>
+               <SheetDescription>{t('strategySheetDescription')}</SheetDescription>
              </SheetHeader>
              <div className="py-4 space-y-4">
                {isGeneratingStrategy ? (
@@ -358,16 +361,16 @@ export default function ContactDetailPage() {
                  </div>
                ) : strategyResult ? (
                  <>
-                   <div><h3 className="font-semibold mb-1">Prioritized Actions:</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.priorities.map((item, i) => <li key={`prio-${i}`}>{item}</li>)}</ul></div>
-                   <div><h3 className="font-semibold mb-1">Suggested Email Sequences:</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.emailSequences.map((item, i) => <li key={`email-${i}`}>{item}</li>)}</ul></div>
-                   <div><h3 className="font-semibold mb-1">Recommended Follow-ups:</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.followUps.map((item, i) => <li key={`followup-${i}`}>{item}</li>)}</ul></div>
+                   <div><h3 className="font-semibold mb-1">{t('prioritizedActions')}</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.priorities.map((item, i) => <li key={`prio-${i}`}>{item}</li>)}</ul></div>
+                   <div><h3 className="font-semibold mb-1">{t('suggestedEmails')}</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.emailSequences.map((item, i) => <li key={`email-${i}`}>{item}</li>)}</ul></div>
+                   <div><h3 className="font-semibold mb-1">{t('recommendedFollowups')}</h3><ul className="list-disc list-inside space-y-1 text-sm">{strategyResult.followUps.map((item, i) => <li key={`followup-${i}`}>{item}</li>)}</ul></div>
                  </>
                ) : (
-                 <p className="text-muted-foreground">Could not generate strategy.</p>
+                  !isGeneratingStrategy && <p className="text-muted-foreground">{t('strategyFailed')}</p> // Show error only if not loading
                )}
              </div>
              <SheetFooter>
-               <Button variant="outline" onClick={() => setStrategySheetOpen(false)}>Close</Button>
+               <Button variant="outline" onClick={() => setStrategySheetOpen(false)}>{t('closeButton')}</Button>
              </SheetFooter>
            </ScrollArea>
         </SheetContent>

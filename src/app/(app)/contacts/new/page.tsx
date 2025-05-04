@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { contactSchema, Contact } from '@/types/contact';
@@ -44,10 +45,11 @@ export default function NewContactPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
-   const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const t = useTranslations(); 
 
 
-  const form = useForm<Contact>({
+  const form = useForm({ 
     resolver: zodResolver(contactSchema.omit({ companyId: true, createdAt: true, updatedAt: true, id: true, score: true, scoreJustification: true, lastScoredAt: true})), // Omit fields managed server-side or auto-generated
     defaultValues: {
       name: '',
@@ -87,7 +89,7 @@ export default function NewContactPage() {
 
   const onSubmit = async (values: Omit<Contact, 'companyId' | 'createdAt' | 'updatedAt' | 'id' | 'score' | 'scoreJustification' | 'lastScoredAt'>) => {
     if (!user) {
-      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add contacts.' });
+      toast({ variant: 'destructive', title: t('NewContactPage.authErrorTitle'), description: t('NewContactPage.authErrorDescription') });
       return;
     }
     setLoading(true);
@@ -119,16 +121,16 @@ export default function NewContactPage() {
       // await handleScoreContact({ ...dataToSave, id: docRef.id });
 
       toast({
-        title: 'Contact Added',
-        description: `${values.name} has been successfully added.`,
+        title: t('NewContactPage.addSuccessTitle'),
+        description: t('NewContactPage.addSuccessDescription', { name: values.name }),
       });
       router.push('/contacts'); // Redirect back to contacts list
     } catch (error: any) {
       console.error("Error adding contact:", error);
       toast({
         variant: 'destructive',
-        title: 'Failed to Add Contact',
-        description: error.message || 'An unexpected error occurred.',
+        title: t('NewContactPage.addFailedTitle'),
+        description: error.message || t('Generic.unexpectedError'),
       });
     } finally {
       setLoading(false);
@@ -142,7 +144,7 @@ export default function NewContactPage() {
               <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-             Add New Contact
+             {t('NewContactPage.title')}
            </CardTitle>
          </CardHeader>
          <CardContent>
@@ -155,9 +157,9 @@ export default function NewContactPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name *</FormLabel>
+                        <FormLabel>{t('NewContactPage.fullNameLabel')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input placeholder={t('NewContactPage.fullNamePlaceholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -169,19 +171,19 @@ export default function NewContactPage() {
                       name="type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Type *</FormLabel>
+                          <FormLabel>{t('NewContactPage.typeLabel')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select contact type" />
+                                <SelectValue placeholder={t('NewContactPage.typePlaceholder')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Prospect">Prospect</SelectItem>
-                              <SelectItem value="Lead">Lead</SelectItem>
-                              <SelectItem value="MQL">MQL (Marketing Qualified Lead)</SelectItem>
-                              <SelectItem value="Customer">Customer</SelectItem>
-                              <SelectItem value="Partner">Partner</SelectItem>
+                              <SelectItem value="Prospect">{t('NewContactPage.prospect')}</SelectItem>
+                              <SelectItem value="Lead">{t('NewContactPage.lead')}</SelectItem>
+                              <SelectItem value="MQL">{t('NewContactPage.mql')}</SelectItem>
+                              <SelectItem value="Customer">{t('NewContactPage.customer')}</SelectItem>
+                              <SelectItem value="Partner">{t('NewContactPage.partner')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -195,9 +197,9 @@ export default function NewContactPage() {
                    name="jobTitle"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Job Title</FormLabel>
+                       <FormLabel>{t('NewContactPage.jobTitleLabel')}</FormLabel>
                        <FormControl>
-                         <Input placeholder="CEO, Marketing Manager..." {...field} />
+                         <Input placeholder={t('NewContactPage.jobTitlePlaceholder')} {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
@@ -209,9 +211,9 @@ export default function NewContactPage() {
                    name="email"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Email</FormLabel>
+                       <FormLabel>{t('NewContactPage.emailLabel')}</FormLabel>
                        <FormControl>
-                         <Input type="email" placeholder="john.doe@example.com" {...field} />
+                         <Input type="email" placeholder={t('NewContactPage.emailPlaceholder')} {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
@@ -223,9 +225,9 @@ export default function NewContactPage() {
                    name="phone"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Phone</FormLabel>
+                       <FormLabel>{t('NewContactPage.phoneLabel')}</FormLabel>
                        <FormControl>
-                         <Input placeholder="+1 123 456 7890" {...field} />
+                         <Input placeholder={t('NewContactPage.phonePlaceholder')} {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
@@ -237,27 +239,27 @@ export default function NewContactPage() {
                     name="tags"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <FormControl>
-                            <div>
-                                <Input
-                                    placeholder="Add tags (press Enter)"
-                                    value={tagInput}
-                                    onChange={(e) => setTagInput(e.target.value)}
-                                    onKeyDown={handleAddTag}
-                                />
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                    {field.value?.map((tag) => (
-                                    <Badge key={tag} variant="secondary">
-                                        {tag}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveTag(tag)}
-                                            className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                            aria-label={`Remove ${tag} tag`}
-                                        >
-                                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                        </button>
+                          <FormLabel>{t('NewContactPage.tagsLabel')}</FormLabel>
+                          <FormControl>
+                              <div>
+                                  <Input
+                                      placeholder={t('NewContactPage.tagsPlaceholder')}
+                                      value={tagInput}
+                                      onChange={(e) => setTagInput(e.target.value)}
+                                      onKeyDown={handleAddTag}
+                                  />
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                      {field.value?.map((tag) => (
+                                      <Badge key={tag} variant="secondary">
+                                          {tag}
+                                          <button
+                                              type="button"
+                                              onClick={() => handleRemoveTag(tag)}
+                                              className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                              aria-label={t('NewContactPage.removeTagLabel', { tag })}
+                                          >
+                                              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                          </button>
                                     </Badge>
                                     ))}
                                 </div>
@@ -274,10 +276,10 @@ export default function NewContactPage() {
                    name="timezone"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Timezone</FormLabel>
+                       <FormLabel>{t('NewContactPage.timezoneLabel')}</FormLabel>
                        <FormControl>
                          {/* Replace with a proper timezone select component later */}
-                         <Input placeholder="e.g., America/New_York" {...field} />
+                         <Input placeholder={t('NewContactPage.timezonePlaceholder')} {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
@@ -289,7 +291,7 @@ export default function NewContactPage() {
                     name="lastCommunicationDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                         <FormLabel>Last Communication Date</FormLabel>
+                         <FormLabel>{t('NewContactPage.lastCommDateLabel')}</FormLabel>
                           <Popover>
                            <PopoverTrigger asChild>
                              <FormControl>
@@ -303,7 +305,7 @@ export default function NewContactPage() {
                                  {field.value ? (
                                     format(field.value as unknown as Date, "PPP") // Assert type to Date for formatting
                                   ) : (
-                                   <span>Pick a date</span>
+                                   <span>{t('NewContactPage.pickDate')}</span>
                                  )}
                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                </Button>
@@ -331,11 +333,11 @@ export default function NewContactPage() {
                     name="lastCommunicationMethod"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Last Communication Method</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Email, Call, Meeting..." {...field} />
-                        </FormControl>
-                        <FormMessage />
+                          <FormLabel>{t('NewContactPage.lastCommMethodLabel')}</FormLabel>
+                          <FormControl>
+                              <Input placeholder={t('NewContactPage.lastCommMethodPlaceholder')} {...field} />
+                          </FormControl>
+                          <FormMessage />
                         </FormItem>
                     )}
                     />
@@ -345,12 +347,12 @@ export default function NewContactPage() {
                     name="communicatedBy"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Communicated By (Agent)</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Agent name or email" {...field} />
-                        </FormControl>
-                        <FormDescription>Who last interacted with the contact.</FormDescription>
-                        <FormMessage />
+                          <FormLabel>{t('NewContactPage.commByLabel')}</FormLabel>
+                          <FormControl>
+                              <Input placeholder={t('NewContactPage.commByPlaceholder')} {...field} />
+                          </FormControl>
+                          <FormDescription>{t('NewContactPage.commByDescription')}</FormDescription>
+                          <FormMessage />
                         </FormItem>
                     )}
                     />
@@ -363,15 +365,15 @@ export default function NewContactPage() {
                    name="communicationSummary"
                    render={({ field }) => (
                      <FormItem>
-                       <FormLabel>Communication Summary</FormLabel>
+                       <FormLabel>{t('NewContactPage.commSummaryLabel')}</FormLabel>
                        <FormControl>
                          <Textarea
-                           placeholder="Enter a summary of communications, or let AI generate it later."
+                           placeholder={t('NewContactPage.commSummaryPlaceholder')}
                            className="resize-y min-h-[100px]"
                            {...field}
                          />
                        </FormControl>
-                       <FormDescription>A brief overview of interactions.</FormDescription>
+                       <FormDescription>{t('NewContactPage.commSummaryDescription')}</FormDescription>
                        <FormMessage />
                      </FormItem>
                    )}
@@ -385,10 +387,10 @@ export default function NewContactPage() {
 
                 <CardFooter className="flex justify-end gap-2 pt-6">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
-                        Cancel
+                        {t('NewContactPage.cancelButton')}
                     </Button>
                    <Button type="submit" disabled={loading}>
-                     {loading ? 'Saving...' : 'Save Contact'}
+                     {loading ? t('NewContactPage.savingButton') : t('NewContactPage.saveButton')}
                    </Button>
                </CardFooter>
              </form>

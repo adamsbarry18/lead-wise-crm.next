@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl'; // Import useTranslations
 import * as z from 'zod';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -30,6 +31,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const t = useTranslations('LoginPage'); // Initialize translations
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -46,14 +48,14 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      toast({ title: 'Login Successful', description: 'Welcome back!' });
+      toast({ title: t('loginSuccessTitle'), description: t('loginSuccessDescription') });
       router.push('/dashboard'); // Redirect to dashboard after successful login
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
+        title: t('loginFailedTitle'),
+        description: error.message || t('Generic.unexpectedError', { ns: 'Generic' }), // Use generic error message
       });
     } finally {
       setLoading(false);
@@ -65,10 +67,10 @@ export default function LoginPage() {
       <div className="flex flex-col items-center text-center space-y-2 mb-6">
         <LogIn className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-semibold tracking-tight">
-          Login to LeadWise CRM
+          {t('title')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email and password below to access your account.
+          {t('description')}
         </p>
       </div>
       <Form {...form}>
@@ -78,9 +80,9 @@ export default function LoginPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('emailLabel')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="m@example.com" {...field} />
+                  <Input placeholder={t('emailPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,27 +93,27 @@ export default function LoginPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t('passwordLabel')}</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder={t('passwordPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t('loadingButton') : t('loginButton')}
           </Button>
         </form>
       </Form>
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Don't have an account?{' '}
+        {t('signupPrompt')}{' '}
         <Link href="/signup" className="underline text-primary hover:text-primary/90">
-          Sign up
+          {t('signupLink')}
         </Link>
       </p>
        <p className="mt-2 text-center text-xs text-muted-foreground">
-            <Link href="/forgot-password"  className="underline hover:text-primary">Forgot password?</Link>
+            <Link href="/forgot-password"  className="underline hover:text-primary">{t('forgotPasswordLink')}</Link>
         </p>
     </>
   );
