@@ -1,6 +1,6 @@
 {
   "LoginPage": {
-    "title": "Connectez-vous à LeadWise CRM",
+    "title": "Connectez-vous à Lead Wise CRM",
     "description": "Entrez votre email et mot de passe ci-dessous pour accéder à votre compte.",
     "emailLabel": "Email",
     "emailPlaceholder": "m@exemple.com",
@@ -22,12 +22,12 @@
     "loginFailedTitle": "Échec de la connexion"
   },
   "SignupPage": {
-    "title": "Créez votre compte LeadWise CRM",
+    "title": "Créez votre compte Lead Wise CRM",
     "description": "Entrez vos informations ci-dessous pour commencer.",
     "companyNameLabel": "Nom de l'entreprise",
     "companyNamePlaceholder": "Acme Inc.",
     "emailLabel": "Email",
-    "metadataTitle": "LeadWise CRM",
+    "metadataTitle": "Lead Wise CRM",
     "metadataDescription": "CRM complet de gestion des leads propulsé par l'IA.",
     "emailPlaceholder": "votre.email@entreprise.com",
     "passwordLabel": "Mot de passe",
@@ -82,7 +82,7 @@
     "logoutSuccessDescription": "Vous avez été déconnecté avec succès.",
     "logoutFailedTitle": "Échec de la déconnexion",
     "logoutFailedDescription": "Impossible de vous déconnecter. Veuillez réessayer.",
-    "appName": "LeadWise"
+    "appName": "Lead Wise"
   },
   "DashboardPage": {
     "title": "Tableau de Bord",
@@ -400,7 +400,7 @@
   "SupportPage": {
     "title": "Centre de Support",
     "knowledgeBaseTitle": "Base de Connaissances & FAQs",
-    "knowledgeBaseDescription": "Trouvez des réponses aux questions courantes et apprenez à utiliser efficacement LeadWise CRM.",
+    "knowledgeBaseDescription": "Trouvez des réponses aux questions courantes et apprenez à utiliser efficacement Lead Wise CRM.",
     "searchPlaceholder": "Rechercher dans la documentation...",
     "gettingStartedLink": "Guide de Démarrage",
     "managingContactsLink": "Gestion des Contacts",

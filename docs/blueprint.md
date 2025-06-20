@@ -1,4 +1,4 @@
-# **App Name**: LeadWise CRM
+# **App Name**: Lead Wise CRM
 
 ## Core Features:
 

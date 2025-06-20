@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'; // Import cookies
 
 // Define supported locales and default locale
 const locales = ['en', 'fr'];
-const defaultLocale = 'en';
+const defaultLocale = 'fr';
 
 export default getRequestConfig(async () => {
   // Read the locale from the NEXT_LOCALE cookie

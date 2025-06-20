@@ -22,12 +22,12 @@
     "loginFailedTitle": "Login Failed"
   },
   "SignupPage": {
-    "title": "Create your LeadWise CRM Account",
+    "title": "Create your Lead Wise CRM Account",
     "description": "Enter your details below to get started.",
     "companyNameLabel": "Company Name",
     "companyNamePlaceholder": "Acme Inc.",
     "emailLabel": "Email",
-    "metadataTitle": "LeadWise CRM",
+    "metadataTitle": "Lead Wise CRM",
     "metadataDescription": "Complete lead management CRM powered by AI.",
     "emailPlaceholder": "your.email@company.com",
     "passwordLabel": "Password",
@@ -82,7 +82,7 @@
     "logoutSuccessDescription": "You have been successfully logged out.",
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "Could not log you out. Please try again.",
-    "appName": "LeadWise"
+    "appName": "Lead Wise"
   },
   "DashboardPage": {
     "title": "Dashboard",
@@ -400,7 +400,7 @@
   "SupportPage": {
     "title": "Support Center",
     "knowledgeBaseTitle": "Knowledge Base & FAQs",
-    "knowledgeBaseDescription": "Find answers to common questions and learn how to use LeadWise CRM effectively.",
+    "knowledgeBaseDescription": "Find answers to common questions and learn how to use Lead Wise CRM effectively.",
     "searchPlaceholder": "Search documentation...",
     "gettingStartedLink": "Getting Started Guide",
     "managingContactsLink": "Managing Contacts",
