@@ -1,6 +1,6 @@
 {
   "LoginPage": {
-    "title": "Login to LeadWise CRM",
+    "title": "Login to Lead Wise CRM",
     "description": "Enter your email and password below to access your account.",
     "emailLabel": "Email",
     "emailPlaceholder": "m@example.com",
@@ -11,6 +11,12 @@
     "signupPrompt": "Don't have an account?",
     "signupLink": "Sign up",
     "forgotPasswordLink": "Forgot password?",
+    "signIn": "Sign In",
+    "forgotPassword": "Forgot your password?",
+    "signUp": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "quote": "The best way to get started is to quit talking and begin doing.",
+    "quoteAuthor": "Walt Disney",
     "loginSuccessTitle": "Login Successful",
     "loginSuccessDescription": "Welcome back!",
     "loginFailedTitle": "Login Failed"

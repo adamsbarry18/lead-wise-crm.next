@@ -18,7 +18,11 @@
     "test:coverage": "jest --coverage",
     "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "docker:up": "sh scripts/docker-up.sh",
+    "docker:down": "sh scripts/docker-down.sh",
+    "docker:logs": "sh scripts/docker-logs.sh",
+    "docker:rebuild": "sh scripts/docker-rebuild.sh"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.6.2",

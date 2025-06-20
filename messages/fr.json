@@ -11,6 +11,12 @@
     "signupPrompt": "Vous n'avez pas de compte ?",
     "signupLink": "S'inscrire",
     "forgotPasswordLink": "Mot de passe oublié ?",
+    "signIn": "Se connecter",
+    "forgotPassword": "Mot de passe oublié ?",
+    "signUp": "S'inscrire",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "quote": "La meilleure façon de se lancer, c'est d'arrêter de parler et de commencer à agir.",
+    "quoteAuthor": "Walt Disney",
     "loginSuccessTitle": "Connexion réussie",
     "loginSuccessDescription": "Bon retour !",
     "loginFailedTitle": "Échec de la connexion"
