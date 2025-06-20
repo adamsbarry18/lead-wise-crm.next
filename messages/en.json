@@ -154,7 +154,16 @@
     "invalidStrategyResponse": "Invalid strategy response from AI.",
     "srOpenMenu": "Open menu",
     "contactTypeCustomer": "Customer",
-    "tagsNone": "None"
+    "tagsNone": "None",
+    "newContactButton": "New Contact",
+    "nameColumn": "Name",
+    "typeColumn": "Type",
+    "jobTitleColumn": "Job Title",
+    "emailColumn": "Email",
+    "phoneColumn": "Phone",
+    "tagsColumn": "Tags",
+    "scoreColumn": "Score",
+    "loadingErrorTitle": "Error Loading Contacts"
   },
   "NewContactPage": {
     "title": "Add New Contact",
@@ -383,7 +392,10 @@
     "customFieldsDescription": "Custom field creation is coming soon.",
     "languageChangeTitle": "Language Change Initiated",
     "languageChangeDescription": "Switching language to {locale}...",
-    "okButton": "OK"
+    "okButton": "OK",
+    "notFoundTitle": "Settings Not Found",
+    "notFoundDescription": "The requested settings could not be found.",
+    "loadingErrorTitle": "Error Loading Settings"
   },
   "SupportPage": {
     "title": "Support Center",

@@ -154,7 +154,16 @@
     "invalidStrategyResponse": "Réponse de stratégie invalide de l'IA.",
     "srOpenMenu": "Ouvrir le menu",
     "contactTypeCustomer": "Client",
-    "tagsNone": "Aucun"
+    "tagsNone": "Aucun",
+    "newContactButton": "Nouveau contact",
+    "nameColumn": "Nom",
+    "typeColumn": "Type",
+    "jobTitleColumn": "Poste",
+    "emailColumn": "Email",
+    "phoneColumn": "Téléphone",
+    "tagsColumn": "Tags",
+    "scoreColumn": "Score",
+    "loadingErrorTitle": "Erreur lors du chargement des contacts"
   },
   "NewContactPage": {
     "title": "Ajouter un Nouveau Contact",
@@ -383,7 +392,10 @@
     "customFieldsDescription": "La création de champs personnalisés sera bientôt disponible.",
     "languageChangeTitle": "Changement de langue initié",
     "languageChangeDescription": "Changement de langue vers {locale}...",
-    "okButton": "OK"
+    "okButton": "OK",
+    "notFoundTitle": "Paramètres introuvables",
+    "notFoundDescription": "Les paramètres demandés sont introuvables.",
+    "loadingErrorTitle": "Erreur lors du chargement des paramètres"
   },
   "SupportPage": {
     "title": "Centre de Support",
