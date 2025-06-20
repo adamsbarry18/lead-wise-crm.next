@@ -2,8 +2,25 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { BarChart, PieChart, TrendingDown, Users } from 'lucide-react';
+import {
+  BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  TrendingDown,
+  Users,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl'; // Import useTranslations
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
 export default function AnalyticsPage() {
   const t = useTranslations('AnalyticsPage');
@@ -22,6 +39,8 @@ export default function AnalyticsPage() {
     { stage: 'MQL', count: 300 },
     { stage: 'Customer', count: 150 },
   ];
+
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042'];
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,7 +77,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('topLeadSourceCardTitle')}</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
+            <PieChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {/* Placeholder values passed to translation */}
@@ -73,7 +92,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('activityScoreCardTitle')}</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
+            <BarChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {/* Placeholder values passed to translation */}
@@ -94,23 +113,42 @@ export default function AnalyticsPage() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">{t('leadSourcesExampleTitle')}</h3>
-              {/* Chart placeholder */}
+              {/* PieChart Recharts */}
               <div className="h-64 bg-muted rounded flex items-center justify-center">
-                <PieChart className="h-12 w-12 text-muted-foreground" />
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={leadSourceData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      label
+                    >
+                      {leadSourceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <pre className="mt-2 text-xs bg-slate-100 p-2 rounded overflow-auto">
-                {JSON.stringify(leadSourceData, null, 2)}
-              </pre>
             </div>
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">{t('conversionFunnelExampleTitle')}</h3>
-              {/* Chart placeholder */}
+              {/* BarChart Recharts */}
               <div className="h-64 bg-muted rounded flex items-center justify-center">
-                <BarChart className="h-12 w-12 text-muted-foreground" />
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={conversionFunnelData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="stage" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <pre className="mt-2 text-xs bg-slate-100 p-2 rounded overflow-auto">
-                {JSON.stringify(conversionFunnelData, null, 2)}
-              </pre>
             </div>
           </div>
         </CardContent>

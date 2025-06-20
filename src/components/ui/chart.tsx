@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
+import { BarChart as RechartsBarChart } from 'recharts';
 
 import { cn } from '@/lib/utils';
 
@@ -319,6 +320,22 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
   return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
 }
 
+interface BarChartProps extends React.ComponentProps<typeof RechartsBarChart> {
+  config?: ChartConfig;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+// BarChart wrapper for unified usage
+const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
+  ({ config = {}, className, children, ...props }, ref) => (
+    <ChartContainer config={config} className={className} ref={ref}>
+      <RechartsBarChart {...props}>{children}</RechartsBarChart>
+    </ChartContainer>
+  )
+);
+BarChart.displayName = 'BarChart';
+
 export {
   ChartContainer,
   ChartTooltip,
@@ -326,4 +343,5 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  BarChart,
 };

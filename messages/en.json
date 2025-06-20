@@ -19,7 +19,8 @@
     "quoteAuthor": "Walt Disney",
     "loginSuccessTitle": "Login Successful",
     "loginSuccessDescription": "Welcome back!",
-    "loginFailedTitle": "Login Failed"
+    "loginFailedTitle": "Login Failed",
+    "signingIn": "Signing in..."
   },
   "SignupPage": {
     "title": "Create your Lead Wise CRM Account",
@@ -45,7 +46,14 @@
     "signupSuccessDescription": "Please check your email to verify your account before logging in.",
     "signupFailedTitle": "Signup Failed",
     "emailInUseError": "This email address is already in use.",
-    "weakPasswordError": "The password is too weak."
+    "weakPasswordError": "The password is too weak.",
+    "quote": "Success is not the key to happiness. Happiness is the key to success.",
+    "quoteAuthor": "Albert Schweitzer",
+    "signUp": "Sign Up",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "signingUp": "Signing up...",
+    "signupErrorTitle": "Signup Error"
   },
   "ForgotPasswordPage": {
     "title": "Forgot Your Password?",
@@ -163,7 +171,17 @@
     "phoneColumn": "Phone",
     "tagsColumn": "Tags",
     "scoreColumn": "Score",
-    "loadingErrorTitle": "Error Loading Contacts"
+    "loadingErrorTitle": "Error Loading Contacts",
+    "deleteConfirmTitle": "Are you sure you want to delete this contact?",
+    "cancel": "Cancel",
+    "confirmDelete": "Confirm Delete",
+    "unknownContact": "Unknown contact",
+    "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the contact.",
+    "openMenu": "Open menu",
+    "actions": "Actions",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "delete": "Delete"
   },
   "NewContactPage": {
     "title": "Add New Contact",
@@ -204,7 +222,8 @@
     "authErrorDescription": "You must be logged in to add contacts.",
     "addSuccessTitle": "Contact Added",
     "addSuccessDescription": "{name} has been successfully added.",
-    "addFailedTitle": "Failed to Add Contact"
+    "addFailedTitle": "Failed to Add Contact",
+    "errorTitle": "Error creating contact"
   },
   "EditContactPage": {
     "title": "Edit Contact: {name}",
@@ -395,7 +414,17 @@
     "okButton": "OK",
     "notFoundTitle": "Settings Not Found",
     "notFoundDescription": "The requested settings could not be found.",
-    "loadingErrorTitle": "Error Loading Settings"
+    "loadingErrorTitle": "Error Loading Settings",
+    "detailsTitle": "Settings Details",
+    "themeSettings": "Theme Settings",
+    "currentTheme": "Current Theme",
+    "languageSettings": "Language Settings",
+    "currentLanguage": "Current Language",
+    "notificationSettings": "Notification Settings",
+    "emailNotifications": "Email Notifications",
+    "disabled": "Disabled",
+    "pushNotifications": "Push Notifications",
+    "inAppNotifications": "In-App Notifications"
   },
   "SupportPage": {
     "title": "Support Center",

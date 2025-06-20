@@ -19,7 +19,8 @@
     "quoteAuthor": "Walt Disney",
     "loginSuccessTitle": "Connexion réussie",
     "loginSuccessDescription": "Bon retour !",
-    "loginFailedTitle": "Échec de la connexion"
+    "loginFailedTitle": "Échec de la connexion",
+    "signingIn": "Connexion en cours..."
   },
   "SignupPage": {
     "title": "Créez votre compte Lead Wise CRM",
@@ -45,7 +46,14 @@
     "signupSuccessDescription": "Veuillez vérifier votre email pour vérifier votre compte avant de vous connecter.",
     "signupFailedTitle": "Échec de l'inscription",
     "emailInUseError": "Cette adresse email est déjà utilisée.",
-    "weakPasswordError": "Le mot de passe est trop faible."
+    "weakPasswordError": "Le mot de passe est trop faible.",
+    "quote": "Le succès n'est pas la clé du bonheur. Le bonheur est la clé du succès.",
+    "quoteAuthor": "Albert Schweitzer",
+    "signUp": "S'inscrire",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter",
+    "signingUp": "Création du compte...",
+    "signupErrorTitle": "Erreur lors de l'inscription"
   },
   "ForgotPasswordPage": {
     "title": "Mot de passe oublié ?",
@@ -163,7 +171,17 @@
     "phoneColumn": "Téléphone",
     "tagsColumn": "Tags",
     "scoreColumn": "Score",
-    "loadingErrorTitle": "Erreur lors du chargement des contacts"
+    "loadingErrorTitle": "Erreur lors du chargement des contacts",
+    "deleteConfirmTitle": "Êtes-vous sûr de vouloir supprimer ce contact ?",
+    "cancel": "Annuler",
+    "confirmDelete": "Confirmer la suppression",
+    "unknownContact": "Contact inconnu",
+    "deleteConfirmDescription": "Cette action est irréversible. Cela supprimera définitivement le contact.",
+    "openMenu": "Ouvrir le menu",
+    "actions": "Actions",
+    "viewDetails": "Voir les détails",
+    "edit": "Modifier",
+    "delete": "Supprimer"
   },
   "NewContactPage": {
     "title": "Ajouter un Nouveau Contact",
@@ -204,7 +222,8 @@
     "authErrorDescription": "Vous devez être connecté pour ajouter des contacts.",
     "addSuccessTitle": "Contact Ajouté",
     "addSuccessDescription": "{name} a été ajouté avec succès.",
-    "addFailedTitle": "Échec de l'Ajout du Contact"
+    "addFailedTitle": "Échec de l'Ajout du Contact",
+    "errorTitle": "Erreur lors de la création du contact"
   },
   "EditContactPage": {
     "title": "Modifier le Contact : {name}",
@@ -395,7 +414,17 @@
     "okButton": "OK",
     "notFoundTitle": "Paramètres introuvables",
     "notFoundDescription": "Les paramètres demandés sont introuvables.",
-    "loadingErrorTitle": "Erreur lors du chargement des paramètres"
+    "loadingErrorTitle": "Erreur lors du chargement des paramètres",
+    "detailsTitle": "Détails des paramètres",
+    "themeSettings": "Paramètres du thème",
+    "currentTheme": "Thème actuel",
+    "languageSettings": "Paramètres de langue",
+    "currentLanguage": "Langue actuelle",
+    "notificationSettings": "Paramètres de notification",
+    "emailNotifications": "Notifications par email",
+    "disabled": "Désactivé",
+    "pushNotifications": "Notifications push",
+    "inAppNotifications": "Notifications intégrées"
   },
   "SupportPage": {
     "title": "Centre de Support",
