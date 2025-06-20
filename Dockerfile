@@ -1,15 +1,19 @@
-# Stage 1: Dependencies
+########################
+# Dependencies Stage #
+########################
 FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Install dependencies needed for build
+RUN apk add --no-cache libc6-compat
 
-# Install dependencies
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Stage 2: Builder
+########################
+#   Builder Stage      #
+########################
 FROM node:18-alpine AS builder
 WORKDIR /app
 
@@ -21,10 +25,12 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
-# Build the application
+# Build Next.js
 RUN npm run build
 
-# Stage 3: Runner
+########################
+#   Runner Stage       #
+########################
 FROM node:18-alpine AS runner
 WORKDIR /app
 
@@ -41,13 +47,13 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set user
+# Set proper permissions
 USER nextjs
 
 # Expose port
 EXPOSE 3000
 
-# Set environment variables
+# Set the correct environment variable for the port
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
