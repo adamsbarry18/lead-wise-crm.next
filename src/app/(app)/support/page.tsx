@@ -31,7 +31,7 @@ export default function SupportPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" /> {t('knowledgeBaseTitle')}
+              <BookOpen className="h-5 w-5" /> {t('knowledgeBaseTitle')}
             </CardTitle>
             <CardDescription>{t('knowledgeBaseDescription')}</CardDescription>
           </CardHeader>
@@ -39,12 +39,30 @@ export default function SupportPage() {
             <Input placeholder={t('searchPlaceholder')} />
             {/* Placeholder Links */}
             <ul className="space-y-1 text-sm text-primary underline">
-              <li><a href="#" onClick={(e) => e.preventDefault()}>{t('gettingStartedLink')}</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>{t('managingContactsLink')}</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>{t('aiScoringLink')}</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>{t('billingLink')}</a></li>
+              <li>
+                <a href="#" onClick={e => e.preventDefault()}>
+                  {t('gettingStartedLink')}
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={e => e.preventDefault()}>
+                  {t('managingContactsLink')}
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={e => e.preventDefault()}>
+                  {t('aiScoringLink')}
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={e => e.preventDefault()}>
+                  {t('billingLink')}
+                </a>
+              </li>
             </ul>
-             <Button variant="outline" className="w-full" disabled>{t('browseArticlesButton')}</Button>
+            <Button variant="outline" className="w-full" disabled>
+              {t('browseArticlesButton')}
+            </Button>
           </CardContent>
         </Card>
 
@@ -52,7 +70,7 @@ export default function SupportPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" /> {t('contactSupportTitle')}
+              <MessageSquare className="h-5 w-5" /> {t('contactSupportTitle')}
             </CardTitle>
             <CardDescription>{t('contactSupportDescription')}</CardDescription>
           </CardHeader>
@@ -64,26 +82,30 @@ export default function SupportPage() {
               </div>
               <div>
                 <Label htmlFor="support-message">{t('messageLabel')}</Label>
-                <Textarea id="support-message" placeholder={t('messagePlaceholder')} rows={5} required />
+                <Textarea
+                  id="support-message"
+                  placeholder={t('messagePlaceholder')}
+                  rows={5}
+                  required
+                />
               </div>
-              <Button type="submit" className="w-full">{t('submitButton')}</Button>
+              <Button type="submit" className="w-full">
+                {t('submitButton')}
+              </Button>
             </form>
           </CardContent>
         </Card>
       </div>
 
       {/* Additional Info (Optional) */}
-       <Card>
-          <CardHeader>
-            <CardTitle>{t('additionalResourcesTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('additionalResourcesDescription')}
-              </p>
-          </CardContent>
-       </Card>
-
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('additionalResourcesTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{t('additionalResourcesDescription')}</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

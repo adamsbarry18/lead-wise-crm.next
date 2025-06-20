@@ -1,0 +1,86 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":semanticPrefixFix",
+    ":automergeMinor",
+    ":automergePr",
+    ":prHourlyLimit4",
+    ":prConcurrentLimit10"
+  ],
+  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
+  "timezone": "Europe/Paris",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group React packages together",
+      "groupName": "React packages",
+      "matchPackagePatterns": ["^react", "@types/react"],
+      "groupSlug": "react"
+    },
+    {
+      "description": "Group Next.js packages",
+      "groupName": "Next.js packages",
+      "matchPackagePatterns": ["^next"],
+      "groupSlug": "nextjs"
+    },
+    {
+      "description": "Group Firebase packages",
+      "groupName": "Firebase packages",
+      "matchPackagePatterns": ["^firebase", "@firebase"],
+      "groupSlug": "firebase"
+    },
+    {
+      "description": "Group Radix UI packages",
+      "groupName": "Radix UI packages",
+      "matchPackagePatterns": ["^@radix-ui"],
+      "groupSlug": "radix"
+    },
+    {
+      "description": "Group testing packages",
+      "groupName": "Testing packages",
+      "matchPackagePatterns": ["jest", "testing-library", "cypress"],
+      "groupSlug": "testing"
+    },
+    {
+      "description": "Group TypeScript-related packages",
+      "groupName": "TypeScript packages",
+      "matchPackagePatterns": ["typescript", "@typescript-eslint", "@types/"],
+      "groupSlug": "typescript",
+      "automerge": true
+    },
+    {
+      "description": "Group ESLint packages",
+      "groupName": "ESLint packages",
+      "matchPackagePatterns": ["eslint"],
+      "groupSlug": "eslint"
+    },
+    {
+      "description": "Automerge non-major updates",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Disable updates for major versions of certain packages",
+      "matchPackagePatterns": ["^@radix-ui", "^firebase"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@team-lead"]
+  },
+  "stabilityDays": 3,
+  "prCreation": "not-pending",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "📦 Dependency Dashboard",
+  "commitMessagePrefix": "chore(deps):",
+  "commitBody": "Signed-off-by: Renovate Bot <bot@renovateapp.com>",
+  "prBodyTemplate": "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{controls}}}{{{footer}}}",
+  "rebaseWhen": "behind-base-branch",
+  "reviewers": ["team-lead"],
+  "assignees": ["team-lead"]
+}

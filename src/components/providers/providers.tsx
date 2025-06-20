@@ -16,18 +16,16 @@ interface ProvidersProps {
 export function Providers({ children, locale, messages }: ProvidersProps) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <ReactQueryClientProvider> {/* Use the renamed import */}
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ReactQueryClientProvider>
+          {' '}
+          {/* Use the renamed import */}
           <AuthProvider>
             {children}
             <Toaster />
           </AuthProvider>
-        </ReactQueryClientProvider> {/* Use the renamed import */}
+        </ReactQueryClientProvider>{' '}
+        {/* Use the renamed import */}
       </ThemeProvider>
     </NextIntlClientProvider>
   );

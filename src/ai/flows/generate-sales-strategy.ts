@@ -8,14 +8,12 @@
  * - GenerateSalesStrategyForContactOutput - The return type for the generateSalesStrategyForContact function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
-import {generateSalesStrategy, InteractionSummary, SalesStrategy} from '@/services/databoutton';
+import { ai } from '@/ai/ai-instance';
+import { z } from 'genkit';
+import { generateSalesStrategy, InteractionSummary, SalesStrategy } from '@/services/databoutton';
 
 const GenerateSalesStrategyForContactInputSchema = z.object({
-  contactSummary: z
-    .string()
-    .describe('A summary of interactions with the contact.'),
+  contactSummary: z.string().describe('A summary of interactions with the contact.'),
 });
 export type GenerateSalesStrategyForContactInput = z.infer<
   typeof GenerateSalesStrategyForContactInputSchema

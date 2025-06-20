@@ -9,7 +9,14 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { MailQuestion } from 'lucide-react';
@@ -45,7 +52,7 @@ export default function ForgotPasswordPage() {
       });
       setEmailSent(true); // Indicate that the email was sent
     } catch (error: any) {
-      console.error("Password reset error:", error);
+      console.error('Password reset error:', error);
       toast({
         variant: 'destructive',
         title: t('resetFailedTitle'),
@@ -60,50 +67,48 @@ export default function ForgotPasswordPage() {
     <>
       <div className="flex flex-col items-center text-center space-y-2 mb-6">
         <MailQuestion className="h-8 w-8 text-primary" />
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t('title')}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
       {emailSent ? (
         <div className="text-center space-y-4">
-            <p className="text-green-600">{t('emailSentSuccess', { email: form.getValues('email') })}</p>
-             <Button variant="outline" asChild>
-                 <Link href="/login">{t('backToLoginButton')}</Link>
-             </Button>
+          <p className="text-green-600">
+            {t('emailSentSuccess', { email: form.getValues('email') })}
+          </p>
+          <Button variant="outline" asChild>
+            <Link href="/login">{t('backToLoginButton')}</Link>
+          </Button>
         </div>
       ) : (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
+              control={form.control}
+              name="email"
+              render={({ field }) => (
                 <FormItem>
-                    <FormLabel>{t('emailLabel')}</FormLabel>
-                    <FormControl>
+                  <FormLabel>{t('emailLabel')}</FormLabel>
+                  <FormControl>
                     <Input type="email" placeholder={t('emailPlaceholder')} {...field} />
-                    </FormControl>
-                    <FormMessage />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
-                )}
+              )}
             />
             <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t('loadingButton') : t('sendButton')}
+              {loading ? t('loadingButton') : t('sendButton')}
             </Button>
-            </form>
+          </form>
         </Form>
       )}
 
       {!emailSent && (
         <p className="mt-4 text-center text-sm text-muted-foreground">
-            {t('rememberPasswordPrompt')}{' '}
-            <Link href="/login" className="underline text-primary hover:text-primary/90">
+          {t('rememberPasswordPrompt')}{' '}
+          <Link href="/login" className="underline text-primary hover:text-primary/90">
             {t('loginLink')}
-            </Link>
+          </Link>
         </p>
       )}
     </>
