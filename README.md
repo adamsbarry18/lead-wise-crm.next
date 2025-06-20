@@ -8,12 +8,14 @@ A modern SaaS CRM powered by Firebase and AI, designed for comprehensive lead ma
 ## 🚀 Features
 
 ### 💼 Business Management
+
 - Company profile creation and management
 - Multi-user access with role-based permissions
 - Secure authentication with Firebase Auth
 - Customizable business settings
 
 ### 👥 Contact Management
+
 - Customizable contact forms with drag-and-drop field builder
 - Advanced contact listing with 50+ customizable columns
 - Multi-criteria filtering and saved views
@@ -21,12 +23,14 @@ A modern SaaS CRM powered by Firebase and AI, designed for comprehensive lead ma
 - AI-generated sales strategies for each contact
 
 ### 📊 Analytics Dashboard
+
 - Real-time performance metrics
 - Activity tracking (emails, calls, meetings)
 - Dynamic KPIs and conversion rates
 - Custom report generation
 
 ### 🤖 AI Integration
+
 - Automated lead scoring
 - Intelligent sales strategy generation
 - Communication analysis and insights
@@ -53,23 +57,28 @@ npm >= 9.0.0
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/yourusername/lead-master-crm.git
 cd lead-master-crm
 ```
 
 2. Install dependencies
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables
+
 ```bash
 cp .env.example .env.local
 ```
+
 Fill in your Firebase and Google Gemini API credentials.
 
 4. Run the development server
+
 ```bash
 npm run dev
 ```
@@ -77,6 +86,7 @@ npm run dev
 ## 📚 Documentation
 
 Detailed documentation is available in the `/docs` directory:
+
 - [Architecture Overview](docs/architecture.md)
 - [Firebase Setup](docs/firebase-setup.md)
 - [AI Integration](docs/ai-integration.md)
@@ -92,6 +102,7 @@ Detailed documentation is available in the `/docs` directory:
 ## 🌍 Internationalization
 
 Currently supported languages:
+
 - English (en)
 - French (fr)
 

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 // Removed AuthProvider, QueryClientProvider, Toaster, NextIntlClientProvider, ThemeProvider imports
 import { Geist } from 'next/font/google';
 import { Geist_Mono } from 'next/font/google';
-import {getLocale, getMessages, getTranslations} from 'next-intl/server'; // Add getTranslations import
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'; // Add getTranslations import
 import { Providers } from '@/components/providers/providers'; // Import the new Providers component
 
 const geistSans = Geist({
@@ -19,12 +19,16 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-
 // Removed const t = useTranslations('AppLayout');
 
+interface GenerateMetadataProps {
+  params: Promise<{ locale: string }>;
+}
+
 // Use generateMetadata for server-side translations
-export async function generateMetadata({params: {locale}}: {params: {locale: string}}): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'SignupPage' }); // Use SignupPage namespace for metadata
+export async function generateMetadata({ params }: GenerateMetadataProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const t = await getTranslations({ locale: resolvedParams.locale, namespace: 'SignupPage' }); // Use SignupPage namespace for metadata
 
   return {
     title: t('metadataTitle'),
@@ -32,11 +36,7 @@ export async function generateMetadata({params: {locale}}: {params: {locale: str
   };
 }
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale(); // Gets 'en' from request.ts
   const messages = await getMessages(); // Gets messages for 'en'
 

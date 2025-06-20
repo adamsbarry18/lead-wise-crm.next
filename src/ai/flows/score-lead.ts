@@ -8,8 +8,8 @@
  * - ScoreLeadOutput - The return type for the scoreLead function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
+import { ai } from '@/ai/ai-instance';
+import { z } from 'genkit';
 
 const ScoreLeadInputSchema = z.object({
   engagement: z.string().describe('The level of engagement of the lead.'),
@@ -53,17 +53,14 @@ History: {{{history}}}
 Other Criteria: {{{otherCriteria}}}`,
 });
 
-const scoreLeadFlow = ai.defineFlow<
-  typeof ScoreLeadInputSchema,
-  typeof ScoreLeadOutputSchema
->(
+const scoreLeadFlow = ai.defineFlow<typeof ScoreLeadInputSchema, typeof ScoreLeadOutputSchema>(
   {
     name: 'scoreLeadFlow',
     inputSchema: ScoreLeadInputSchema,
     outputSchema: ScoreLeadOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

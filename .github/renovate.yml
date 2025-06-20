@@ -1,0 +1,76 @@
+---
+# GitHub-specific settings for Renovate
+version: 1
+update_schedule:
+  - package_ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+      time: '22:00'
+      timezone: 'Europe/Paris'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'team-lead'
+    assignees:
+      - 'team-lead'
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      react:
+        patterns:
+          - 'react*'
+          - '@types/react*'
+      nextjs:
+        patterns:
+          - 'next*'
+      firebase:
+        patterns:
+          - 'firebase*'
+          - '@firebase/*'
+      radix:
+        patterns:
+          - '@radix-ui/*'
+    ignore:
+      # Ignore major version updates for certain packages
+      - dependency-name: '@radix-ui/*'
+        update-types: ['major']
+      - dependency-name: 'firebase'
+        update-types: ['major']
+
+  - package_ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+      time: '22:00'
+      timezone: 'Europe/Paris'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'team-lead'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+
+  - package_ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+      time: '22:00'
+      timezone: 'Europe/Paris'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'team-lead'
+    labels:
+      - 'dependencies'
+      - 'docker'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'

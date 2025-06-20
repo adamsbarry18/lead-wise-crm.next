@@ -1,16 +1,20 @@
-# Stage 1: Dependencies
-FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
+########################
+# Dependencies Stage #
+########################
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Install dependencies needed for build
+RUN apk add --no-cache libc6-compat
 
-# Install dependencies
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Stage 2: Builder
-FROM node:18-alpine AS builder
+########################
+#   Builder Stage      #
+########################
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -18,38 +22,47 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Set environment variables
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Build the application
+# Build Next.js with standalone output
 RUN npm run build
 
-# Stage 3: Runner
-FROM node:18-alpine AS runner
+# Ensure standalone directory exists
+RUN ls -la .next/standalone || exit 1
+
+########################
+#   Runner Stage       #
+########################
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files
-COPY --from=builder /app/public ./public
+# Create necessary directories
+RUN mkdir -p /app/public && chown nextjs:nodejs /app/public
+RUN mkdir -p /app/.next/static && chown nextjs:nodejs /app/.next/static
+
+# Copy necessary files and ensure they exist
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Set user
+# Set proper permissions
 USER nextjs
 
 # Expose port
 EXPOSE 3000
 
-# Set environment variables
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+# Set the correct environment variable for the port
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 # Start the application
 CMD ["node", "server.js"] 

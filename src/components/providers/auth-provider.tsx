@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
       setUser(user);
       setLoading(false);
     });
@@ -27,23 +27,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Render skeleton or loading indicator while auth state is loading
   if (loading) {
-     return (
-       <div className="flex items-center justify-center min-h-screen">
-         <Skeleton className="h-12 w-12 rounded-full" />
-         <div className="ml-4 space-y-2">
-           <Skeleton className="h-4 w-[250px]" />
-           <Skeleton className="h-4 w-[200px]" />
-         </div>
-       </div>
-     );
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <div className="ml-4 space-y-2">
+          <Skeleton className="h-4 w-[250px]" />
+          <Skeleton className="h-4 w-[200px]" />
+        </div>
+      </div>
+    );
   }
 
-
-  return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
