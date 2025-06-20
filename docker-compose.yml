@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Application principale
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${TARGET:-runner} # runner pour prod, builder pour dev
+    image: leadmaster-crm
+    container_name: leadmaster-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+      - FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
+      - FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID}
+      - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - leadmaster-network
+
+  # Service Redis pour le cache (optionnel, décommenter si nécessaire)
+  # redis:
+  #   image: redis:alpine
+  #   container_name: leadmaster-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - leadmaster-network
+
+volumes:
+  redis-data:
+
+networks:
+  leadmaster-network:
+    driver: bridge 
