@@ -1,188 +1,335 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useAuth } from '@/components/providers/auth-provider';
-import { doc, getDoc, updateDoc, FirestoreError } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Upload, KeyRound } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-interface UserProfile {
-  id: string;
-  email: string;
-  displayName: string;
-  photoURL?: string;
-  createdAt: any; // Firestore Timestamp
-  lastLoginAt: any; // Firestore Timestamp
-  role: string;
-  company?: {
-    name: string;
-    position: string;
-  };
-}
+const companySchema = z.object({
+  name: z.string().min(1, 'Company name is required.'),
+  address: z.string().optional(),
+  logoUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+});
+type CompanyFormValues = z.infer<typeof companySchema>;
+
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(6, 'Current password is required.'),
+    newPassword: z.string().min(6, 'New password must be at least 6 characters.'),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: "New passwords don't match",
+    path: ['confirmPassword'],
+  });
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const t = useTranslations('ProfilePage');
-  const tGeneric = useTranslations('Generic');
+  const [companyDataLoading, setCompanyDataLoading] = useState(true);
+  const [isUpdatingCompany, setIsUpdatingCompany] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+  const companyForm = useForm<CompanyFormValues>({
+    resolver: zodResolver(companySchema),
+    defaultValues: { name: '', address: '', logoUrl: '' },
+  });
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchCompanyData = async () => {
       if (!user) {
-        setLoading(false);
+        setCompanyDataLoading(false);
         return;
       }
-
       try {
-        const profileRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(profileRef);
-
-        if (docSnap.exists()) {
-          setProfile({ id: docSnap.id, ...docSnap.data() } as UserProfile);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: t('notFoundTitle'),
-            description: t('notFoundDescription'),
+        const companyRef = doc(db, 'companies', user.uid);
+        const companySnap = await getDoc(companyRef);
+        if (companySnap.exists()) {
+          const data = companySnap.data();
+          companyForm.reset({
+            name: data.name || '',
+            address: data.address || '',
+            logoUrl: data.logoUrl || '',
           });
-          router.push('/');
+        } else {
+          console.warn(t('companyNotFoundError', { uid: user.uid }));
         }
       } catch (error) {
-        const firestoreError = error as FirestoreError;
-        toast({
-          variant: 'destructive',
-          title: t('loadingErrorTitle'),
-          description: firestoreError.message || tGeneric('unexpectedError'),
-        });
+        console.error('Error fetching company data:', error);
+        toast({ variant: 'destructive', title: t('errorLoadingCompany') });
       } finally {
-        setLoading(false);
+        setCompanyDataLoading(false);
       }
     };
+    if (!authLoading) {
+      fetchCompanyData();
+    }
+  }, [user, authLoading, companyForm, toast, t]);
 
-    fetchProfile();
-  }, [user, router, toast, t, tGeneric]);
+  const onCompanySubmit = async (values: CompanyFormValues) => {
+    if (!user) return;
+    setIsUpdatingCompany(true);
+    try {
+      const companyRef = doc(db, 'companies', user.uid);
+      const companySnap = await getDoc(companyRef);
+      if (companySnap.exists()) {
+        await updateDoc(companyRef, { ...values, updatedAt: new Date() });
+      } else {
+        await setDoc(companyRef, {
+          ...values,
+          adminEmail: user.email,
+          createdAt: new Date(),
+        });
+        console.warn(t('companyCreatedWarning'));
+      }
+      toast({ title: t('profileUpdateSuccess'), description: t('profileUpdateSuccessDesc') });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: t('updateFailedTitle'), description: error.message });
+    } finally {
+      setIsUpdatingCompany(false);
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto py-10">
-        <div className="flex items-center space-x-4 mb-8">
-          <Button variant="ghost" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="h-8 w-48 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-        <Card>
-          <CardHeader>
-            <div className="h-6 w-32 bg-gray-200 animate-pulse rounded mb-2"></div>
-            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const onPasswordSubmit = async (values: PasswordFormValues) => {
+    if (!user || !user.email) {
+      toast({ variant: 'destructive', title: 'Error', description: t('userNotFoundError') });
+      return;
+    }
+    setIsUpdatingPassword(true);
+    try {
+      const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
+      await reauthenticateWithCredential(auth.currentUser!, credential);
+      await updatePassword(auth.currentUser!, values.newPassword);
+      toast({ title: t('passwordUpdateSuccess'), description: t('passwordUpdateSuccessDesc') });
+      passwordForm.reset();
+      setShowPasswordDialog(false);
+    } catch (error: any) {
+      let description = t('passwordUpdateFailedGeneric');
+      if (error.code === 'auth/wrong-password') {
+        description = t('incorrectPasswordError');
+        passwordForm.setError('currentPassword', { type: 'manual', message: description });
+      } else if (error.code === 'auth/weak-password') {
+        description = t('weakPasswordError');
+        passwordForm.setError('newPassword', { type: 'manual', message: description });
+      }
+      toast({ variant: 'destructive', title: t('passwordUpdateFailed'), description });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
-  if (!profile) {
-    return (
-      <div className="container mx-auto py-10">
-        <div className="flex items-center space-x-4 mb-8">
-          <Button variant="ghost" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold">{t('notFoundTitle')}</h1>
-        </div>
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">{t('notFoundDescription')}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const isLoading = authLoading || companyDataLoading;
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center space-x-4 mb-8">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
-      </div>
-
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
       <Card>
         <CardHeader>
-          <CardTitle>{t('detailsTitle')}</CardTitle>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={profile.photoURL} alt={profile.displayName} />
-              <AvatarFallback>{profile.displayName.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-2xl font-bold">{profile.displayName}</h2>
-              <p className="text-muted-foreground">{profile.email}</p>
-              <Badge variant="outline" className="mt-2">
-                {profile.role}
-              </Badge>
-            </div>
-          </div>
+          <CardTitle>{t('companyInfoCardTitle')}</CardTitle>
+          <CardDescription>{t('companyInfoCardDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            {profile.company && (
-              <div>
-                <h3 className="font-semibold mb-1">{t('companyInfo')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('companyName')}</p>
-                    <p>{profile.company.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('position')}</p>
-                    <p>{profile.company.position}</p>
-                  </div>
-                </div>
+          {isLoading ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-16 w-16 rounded-full" />
+                <Skeleton className="h-8 w-32" />
               </div>
-            )}
-
-            <div>
-              <h3 className="font-semibold mb-1">{t('accountInfo')}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('createdAt')}</p>
-                  <p>
-                    {profile.createdAt
-                      ? format(new Date(profile.createdAt.seconds * 1000), 'PPP')
-                      : tGeneric('na')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('lastLoginAt')}</p>
-                  <p>
-                    {profile.lastLoginAt
-                      ? format(new Date(profile.lastLoginAt.seconds * 1000), 'PPP')
-                      : tGeneric('na')}
-                  </p>
-                </div>
-              </div>
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
+          ) : (
+            <Form {...companyForm}>
+              <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={companyForm.watch('logoUrl') || undefined} />
+                    <AvatarFallback className="text-xl">
+                      {companyForm.watch('name') ? (
+                        companyForm.watch('name').charAt(0).toUpperCase()
+                      ) : (
+                        <Upload className="h-6 w-6" />
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <FormField
+                    control={companyForm.control}
+                    name="logoUrl"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>{t('logoUrlLabel')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={t('logoUrlPlaceholder')} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={companyForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('companyNameLabel')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t('companyNameLabel')} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={companyForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('companyAddressLabel')}</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder={t('companyAddressPlaceholder')} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isUpdatingCompany}>
+                  {isUpdatingCompany ? t('savingCompanyButton') : t('saveCompanyButton')}
+                </Button>
+              </form>
+            </Form>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('accountSettingsCardTitle')}</CardTitle>
+          <CardDescription>{t('accountSettingsCardDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <div>
+              <Label>{t('emailLabel')}</Label>
+              <Input value={user?.email || ''} disabled />
+              <p className="text-sm text-muted-foreground mt-1">{t('emailChangeNotice')}</p>
+            </div>
+          )}
+          <AlertDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">
+                <KeyRound className="mr-2 h-4 w-4" /> {t('changePasswordButton')}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('passwordDialogTitle')}</AlertDialogTitle>
+                <AlertDialogDescription>{t('passwordDialogDescription')}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <Form {...passwordForm}>
+                <form
+                  id="password-change-form"
+                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                  className="space-y-4 pt-4"
+                >
+                  <FormField
+                    control={passwordForm.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('currentPasswordLabel')}</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={passwordForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('newPasswordLabel')}</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={passwordForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('confirmPasswordLabel')}</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isUpdatingPassword}>
+                  {t('cancelButton')}
+                </AlertDialogCancel>
+                <Button type="submit" form="password-change-form" disabled={isUpdatingPassword}>
+                  {isUpdatingPassword ? t('updatingPasswordButton') : t('updatePasswordButton')}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div>
+            <Label>{t('mfaLabel')}</Label>
+            <Button variant="outline" disabled className="w-full mt-1 justify-start">
+              {t('mfaButton')}
+            </Button>
+            <p className="text-sm text-muted-foreground mt-1">{t('mfaDescription')}</p>
           </div>
         </CardContent>
       </Card>

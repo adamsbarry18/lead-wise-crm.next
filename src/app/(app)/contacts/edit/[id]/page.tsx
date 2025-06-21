@@ -2,11 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { contactSchema, Contact } from '@/types/contact';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +29,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
-import { doc, getDoc, updateDoc, Timestamp, FirestoreError } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { CalendarIcon, ArrowLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -40,36 +37,14 @@ import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 
-// Define a specific type for the form, ensuring Date type for the calendar
-type ContactFormData = Omit<
+// Type for form values, excluding read-only/server-managed fields
+type EditContactFormValues = Omit<
   Contact,
-  | 'companyId'
-  | 'createdAt'
-  | 'updatedAt'
-  | 'id'
-  | 'score'
-  | 'scoreJustification'
-  | 'lastScoredAt'
-  | 'lastCommunicationDate'
-> & {
-  lastCommunicationDate?: Date | null; // Allow null to match the schema
-};
-
-// Create a specific schema for the edit form that expects a Date object
-const editContactFormSchema = contactSchema
-  .omit({
-    companyId: true,
-    createdAt: true,
-    updatedAt: true,
-    id: true,
-    score: true,
-    scoreJustification: true,
-    lastScoredAt: true,
-  })
-  .extend({
-    lastCommunicationDate: z.date().optional().nullable(), // Override to expect Date or null/undefined
-  });
+  'companyId' | 'createdAt' | 'updatedAt' | 'id' | 'score' | 'scoreJustification' | 'lastScoredAt'
+>;
 
 export default function EditContactPage() {
   const [loading, setLoading] = useState(false);
@@ -79,24 +54,33 @@ export default function EditContactPage() {
   const params = useParams();
   const contactId = params.id as string;
   const { user } = useAuth();
+  const [tagInput, setTagInput] = useState('');
   const queryClient = useQueryClient();
   const t = useTranslations('EditContactPage');
   const tGeneric = useTranslations('Generic');
-  const [tagInput, setTagInput] = useState('');
 
-  const form = useForm<ContactFormData>({
-    // Use the new form data type
-    resolver: zodResolver(editContactFormSchema), // Use the form-specific schema
+  const form = useForm<EditContactFormValues>({
+    resolver: zodResolver(
+      contactSchema.omit({
+        companyId: true,
+        createdAt: true,
+        updatedAt: true,
+        id: true,
+        score: true,
+        scoreJustification: true,
+        lastScoredAt: true,
+      })
+    ),
     defaultValues: {
       // Initialize with empty/default values
-      name: '',
+      fullName: '',
       type: 'Prospect',
       jobTitle: '',
       tags: [],
       phone: '',
       email: '',
       timezone: '',
-      lastCommunicationDate: null,
+      lastCommunicationDate: undefined,
       lastCommunicationMethod: '',
       communicationSummary: '',
       communicatedBy: '',
@@ -118,34 +102,36 @@ export default function EditContactPage() {
 
         if (docSnap.exists()) {
           const data = docSnap.data() as Contact;
-          const formData: ContactFormData = {
+          // Convert Firestore Timestamps back to JS Date objects for the form
+          const formData = {
             ...data,
-            lastCommunicationDate: data.lastCommunicationDate?.toDate(),
+            lastCommunicationDate: (data.lastCommunicationDate as any)?.toDate(),
+            // Ensure tags is an array
             tags: Array.isArray(data.tags) ? data.tags : [],
           };
-          const validKeys = Object.keys(form.getValues()) as Array<keyof ContactFormData>;
+          // Filter out fields not in EditContactFormValues if necessary
+          const validKeys = Object.keys(form.getValues()) as Array<keyof EditContactFormValues>;
           const filteredFormData = Object.fromEntries(
             Object.entries(formData).filter(([key]) =>
-              validKeys.includes(key as keyof ContactFormData)
+              validKeys.includes(key as keyof EditContactFormValues)
             )
-          ) as ContactFormData;
+          ) as EditContactFormValues;
 
-          form.reset(filteredFormData);
+          form.reset(filteredFormData); // Reset form with fetched data
         } else {
           toast({
             variant: 'destructive',
             title: tGeneric('error'),
             description: t('notFoundError'),
           });
-          router.push('/contacts');
+          router.push('/contacts'); // Redirect if contact doesn't exist
         }
-      } catch (error) {
-        const firestoreError = error as FirestoreError;
-        console.error('Error fetching contact:', firestoreError);
+      } catch (error: any) {
+        console.error('Error fetching contact:', error);
         toast({
           variant: 'destructive',
           title: t('loadingErrorTitle'),
-          description: firestoreError.message || tGeneric('unexpectedError'),
+          description: error.message,
         });
       } finally {
         setInitialLoading(false);
@@ -178,8 +164,7 @@ export default function EditContactPage() {
     ); // Mark form as dirty
   };
 
-  const onSubmit = async (values: ContactFormData) => {
-    // Use the new form data type
+  const onSubmit = async (values: EditContactFormValues) => {
     if (!user || !contactId) return;
 
     setLoading(true);
@@ -208,7 +193,7 @@ export default function EditContactPage() {
 
       toast({
         title: t('updateSuccessTitle'),
-        description: t('updateSuccessDescription', { name: values.name }),
+        description: t('updateSuccessDescription', { name: values.fullName }),
       });
       queryClient.invalidateQueries({ queryKey: ['contact', contactId, user?.uid] }); // Invalidate detail view
       queryClient.invalidateQueries({ queryKey: ['contacts', user?.uid] }); // Invalidate list view
@@ -229,9 +214,8 @@ export default function EditContactPage() {
     return (
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>{t('loadingContact')}</CardTitle>
-        </CardHeader>{' '}
-        {/* Use loading text */}
+          <Skeleton className="h-8 w-1/2" />
+        </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Skeleton className="h-10 w-full" />
@@ -258,17 +242,16 @@ export default function EditContactPage() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          {t('title', { name: form.getValues('name') || '...' })} {/* Show current name */}
+          {t('title', { name: form.getValues('fullName') || '...' })}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Reuse the form fields from NewContactPage, potentially abstracting into a component */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="fullName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('fullNameLabel')}</FormLabel>
@@ -286,8 +269,6 @@ export default function EditContactPage() {
                   <FormItem>
                     <FormLabel>{t('typeLabel')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      {' '}
-                      {/* Use value prop */}
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -472,7 +453,7 @@ export default function EditContactPage() {
               )}
             />
             {/* Custom Fields would be rendered here */}
-            <CardFooter className="flex justify-end gap-2 pt-6">
+            <CardFooter className="flex justify-end gap-2 pt-6 px-0">
               <Button
                 type="button"
                 variant="outline"
@@ -482,8 +463,6 @@ export default function EditContactPage() {
                 {t('cancelButton')}
               </Button>
               <Button type="submit" disabled={loading || !form.formState.isDirty}>
-                {' '}
-                {/* Disable if not loading and form hasn't changed */}
                 {loading ? t('savingButton') : t('saveButton')}
               </Button>
             </CardFooter>

@@ -1,12 +1,11 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-// Removed useTranslations import
 import './globals.css';
 import { cn } from '@/lib/utils';
-// Removed AuthProvider, QueryClientProvider, Toaster, NextIntlClientProvider, ThemeProvider imports
 import { Geist } from 'next/font/google';
 import { Geist_Mono } from 'next/font/google';
-import { getLocale, getMessages, getTranslations } from 'next-intl/server'; // Add getTranslations import
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers/providers'; // Import the new Providers component
 
 const geistSans = Geist({
@@ -19,16 +18,12 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-// Removed const t = useTranslations('AppLayout');
-
-interface GenerateMetadataProps {
-  params: Promise<{ locale: string }>;
-}
-
-// Use generateMetadata for server-side translations
-export async function generateMetadata({ params }: GenerateMetadataProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const t = await getTranslations({ locale: resolvedParams.locale, namespace: 'SignupPage' }); // Use SignupPage namespace for metadata
+// generateMetadata reste tel quel, il est déjà correct pour une locale non-routable
+// Il utilisera la locale déterminée par i18n.ts
+export async function generateMetadata(): Promise<Metadata> {
+  // Supprimez { params }: GenerateMetadataProps
+  const locale = await getLocale();
+  const t = await getTranslations('SignupPage');
 
   return {
     title: t('metadataTitle'),
@@ -37,8 +32,8 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getLocale(); // Gets 'en' from request.ts
-  const messages = await getMessages(); // Gets messages for 'en'
+  const locale = await getLocale(); // Utilise la locale déterminée par i18n.ts (via cookie ou Accept-Language)
+  const messages = await getMessages(); // Charge les messages pour cette locale
 
   return (
     <html lang={locale} suppressHydrationWarning>
