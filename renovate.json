@@ -5,12 +5,10 @@
     ":dependencyDashboard",
     ":semanticCommits",
     ":semanticPrefixFix",
-    ":automergeMinor",
-    ":automergePr",
     ":prHourlyLimit4",
     ":prConcurrentLimit10"
   ],
-  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
+  "schedule": ["at any time on Monday"],
   "timezone": "Europe/Paris",
   "labels": ["dependencies"],
   "packageRules": [
@@ -48,19 +46,13 @@
       "description": "Group TypeScript-related packages",
       "groupName": "TypeScript packages",
       "matchPackagePatterns": ["typescript", "@typescript-eslint", "@types/"],
-      "groupSlug": "typescript",
-      "automerge": true
+      "groupSlug": "typescript"
     },
     {
       "description": "Group ESLint packages",
       "groupName": "ESLint packages",
       "matchPackagePatterns": ["eslint"],
       "groupSlug": "eslint"
-    },
-    {
-      "description": "Automerge non-major updates",
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true
     },
     {
       "description": "Disable updates for major versions of certain packages",
