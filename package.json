@@ -55,7 +55,7 @@
     "date-fns": "^3.6.0",
     "firebase": "^11.3.0",
     "genkit": "^1.6.2",
-    "lucide-react": "^0.475.0",
+    "lucide-react": "^0.517.0",
     "next": "15.2.3",
     "next-intl": "^4.1.0",
     "next-themes": "^0.2.1",
