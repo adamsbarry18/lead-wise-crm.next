@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
 import { doc, getDoc, setDoc, FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -30,9 +30,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { UserCog, Database, Palette, Bell, Download, ArrowLeft } from 'lucide-react';
+import { UserCog, Database, Palette, Bell, Download } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Skeleton } from '@/components/ui/skeleton';
+import { setLocale } from '@/i18n/actions';
 
 interface Settings {
   id: string;
@@ -56,9 +57,9 @@ type FlattenedSettings = {
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = React.useTransition();
   const { user } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const locale = useLocale();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
@@ -131,10 +132,19 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLanguageChange = (newLocale: string) => {
-    handleSettingChange('language', newLocale);
-    const newPath = pathname.replace(new RegExp(`^/${locale}`), `/${newLocale}`);
-    router.replace(newPath);
+  const handleLanguageChange = async (newLocale: string) => {
+    if (isPending) return;
+
+    // 1. Save preference to DB for persistence across sessions/devices
+    await handleSettingChange('language', newLocale);
+
+    // 2. Set cookie for the current session
+    await setLocale(newLocale);
+
+    // 3. Refresh the page to apply the new language
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
@@ -173,7 +183,7 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs defaultValue="appearance" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">
             <UserCog className="mr-2 h-4 w-4" />
@@ -276,6 +286,7 @@ export default function SettingsPage() {
                 <Select
                   onValueChange={value => handleThemeChange(value as any)}
                   defaultValue={theme}
+                  disabled={isPending}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder={t('selectTheme')} />
@@ -291,7 +302,8 @@ export default function SettingsPage() {
                 <Label>{t('languageLabel')}</Label>
                 <Select
                   onValueChange={handleLanguageChange}
-                  defaultValue={settings?.language || 'fr'}
+                  defaultValue={locale}
+                  disabled={isPending}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder={t('selectLanguage')} />

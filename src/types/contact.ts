@@ -5,7 +5,7 @@ import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 export const contactSchema = z.object({
   id: z.string().optional(), // Firestore document ID, optional during creation
   companyId: z.string().describe('ID of the company this contact belongs to'), // Add companyId
-  name: z.string().min(1, 'Name is required'),
+  fullName: z.string().min(1, 'Name is required'),
   type: z.enum(['Prospect', 'Lead', 'MQL', 'Customer', 'Partner']).default('Prospect'),
   jobTitle: z.string().optional(),
   tags: z.array(z.string()).optional(),
