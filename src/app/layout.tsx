@@ -22,7 +22,8 @@ const geistMono = Geist_Mono({
 // Il utilisera la locale déterminée par i18n.ts
 export async function generateMetadata(): Promise<Metadata> {
   // Supprimez { params }: GenerateMetadataProps
-  const t = await getTranslations({ namespace: 'SignupPage' }); // La locale sera déterminée automatiquement par getTranslations via i18n.ts
+  const locale = await getLocale();
+  const t = await getTranslations('SignupPage');
 
   return {
     title: t('metadataTitle'),
