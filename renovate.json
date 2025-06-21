@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard",
     ":semanticCommits",
     ":semanticPrefixFix",
@@ -10,52 +10,56 @@
     ":prHourlyLimit4",
     ":prConcurrentLimit10"
   ],
-  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
+  "schedule": [
+    "after 10pm every weekday",
+    "every weekend",
+    "before 5am every weekday"
+  ],
   "timezone": "Europe/Paris",
   "labels": ["dependencies"],
   "packageRules": [
     {
       "description": "Group React packages together",
       "groupName": "React packages",
-      "matchPackagePatterns": ["^react", "@types/react"],
-      "groupSlug": "react"
+      "groupSlug": "react",
+      "matchPackageNames": ["/^react/", "/@types/react/"]
     },
     {
       "description": "Group Next.js packages",
       "groupName": "Next.js packages",
-      "matchPackagePatterns": ["^next"],
-      "groupSlug": "nextjs"
+      "groupSlug": "nextjs",
+      "matchPackageNames": ["/^next/"]
     },
     {
       "description": "Group Firebase packages",
       "groupName": "Firebase packages",
-      "matchPackagePatterns": ["^firebase", "@firebase"],
-      "groupSlug": "firebase"
+      "groupSlug": "firebase",
+      "matchPackageNames": ["/^firebase/", "/@firebase/"]
     },
     {
       "description": "Group Radix UI packages",
       "groupName": "Radix UI packages",
-      "matchPackagePatterns": ["^@radix-ui"],
-      "groupSlug": "radix"
+      "groupSlug": "radix",
+      "matchPackageNames": ["/^@radix-ui/"]
     },
     {
       "description": "Group testing packages",
       "groupName": "Testing packages",
-      "matchPackagePatterns": ["jest", "testing-library", "cypress"],
-      "groupSlug": "testing"
+      "groupSlug": "testing",
+      "matchPackageNames": ["/jest/", "/testing-library/", "/cypress/"]
     },
     {
       "description": "Group TypeScript-related packages",
       "groupName": "TypeScript packages",
-      "matchPackagePatterns": ["typescript", "@typescript-eslint", "@types/"],
       "groupSlug": "typescript",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": ["/typescript/", "/@typescript-eslint/", "/@types//"]
     },
     {
       "description": "Group ESLint packages",
       "groupName": "ESLint packages",
-      "matchPackagePatterns": ["eslint"],
-      "groupSlug": "eslint"
+      "groupSlug": "eslint",
+      "matchPackageNames": ["/eslint/"]
     },
     {
       "description": "Automerge non-major updates",
@@ -64,16 +68,16 @@
     },
     {
       "description": "Disable updates for major versions of certain packages",
-      "matchPackagePatterns": ["^@radix-ui", "^firebase"],
       "matchUpdateTypes": ["major"],
-      "enabled": false
+      "enabled": false,
+      "matchPackageNames": ["/^@radix-ui/", "/^firebase/"]
     }
   ],
   "vulnerabilityAlerts": {
     "labels": ["security"],
     "assignees": ["@team-lead"]
   },
-  "stabilityDays": 3,
+  "minimumReleaseAge": "3 days",
   "prCreation": "not-pending",
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "📦 Dependency Dashboard",
