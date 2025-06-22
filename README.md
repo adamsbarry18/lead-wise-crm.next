@@ -71,6 +71,106 @@ npm >= 10.0.0
     npm run dev
     ```
 
+## 🐳 Docker Deployment
+
+### Prerequisites
+
+```bash
+docker >= 20.0.0
+docker-compose >= 2.0.0
+```
+
+### Quick Start with Docker
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/adamsbarry18/lead-wise-crm.next.git
+   cd lead-wise-crm.next
+   ```
+
+2. **Set up environment variables**
+
+   Create a `.env` file in the root directory with your Firebase and Google Gemini API credentials:
+
+   ```bash
+   # Firebase Configuration
+   FIREBASE_API_KEY=your_firebase_api_key
+   FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   FIREBASE_PROJECT_ID=your_project_id
+   FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   FIREBASE_APP_ID=your_app_id
+
+   # Google Gemini AI
+   GOOGLE_GENAI_API_KEY=your_google_genai_api_key
+
+   # Application URL (optional, defaults to http://localhost:3000)
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   ```
+
+3. **Build and start the application**
+
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access the application**
+
+   Navigate to **http://localhost:3000** in your browser to access the Lead Wise CRM application.
+
+### Docker Commands
+
+```bash
+# Start the application
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+
+# Rebuild and start
+docker-compose up --build
+
+# View logs
+docker-compose logs -f app
+
+# Stop and remove volumes
+docker-compose down -v
+```
+
+### Docker Configuration
+
+The application uses a multi-stage Dockerfile for optimized production builds:
+
+- **Stage 1 (deps)**: Installs dependencies
+- **Stage 2 (builder)**: Builds the Next.js application
+- **Stage 3 (runner)**: Creates the production runtime with minimal footprint
+
+The `docker-compose.yml` file includes:
+
+- Application container with all necessary environment variables
+- Volume mounts for development
+- Network configuration
+- Optional Redis service (commented out)
+
+### Environment Variables for Docker
+
+Make sure your `.env` file contains all required variables:
+
+| Variable                       | Description                  | Required                               |
+| ------------------------------ | ---------------------------- | -------------------------------------- |
+| `FIREBASE_API_KEY`             | Firebase API key             | Yes                                    |
+| `FIREBASE_AUTH_DOMAIN`         | Firebase auth domain         | Yes                                    |
+| `FIREBASE_PROJECT_ID`          | Firebase project ID          | Yes                                    |
+| `FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket      | Yes                                    |
+| `FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | Yes                                    |
+| `FIREBASE_APP_ID`              | Firebase app ID              | Yes                                    |
+| `GOOGLE_GENAI_API_KEY`         | Google Gemini AI API key     | Yes                                    |
+| `NEXT_PUBLIC_APP_URL`          | Application URL              | No (defaults to http://localhost:3000) |
+
 ## 📥 Data Import
 
 You can bulk-import contacts using a CSV file. Go to the Contacts page and use the "Import" feature.
