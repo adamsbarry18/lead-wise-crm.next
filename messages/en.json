@@ -112,7 +112,12 @@
     "mockTask3": "Send proposal to Gamma Solutions",
     "activityUnknown": "Unknown",
     "errorTitle": "Failed to load dashboard",
-    "errorDescription": "There was a problem fetching your data. Please try again later."
+    "errorDescription": "There was a problem fetching your data. Please try again later.",
+    "noDataCard": {
+      "title": "Welcome to your Dashboard!",
+      "description": "It looks a bit empty here. Start by adding your first contact to see your dashboard in action.",
+      "link": "Add a contact"
+    }
   },
   "NewContactPage": {
     "title": "Add New Contact",
@@ -209,7 +214,12 @@
     "totalCustomersDescription": "Active customers in the system",
     "contactCountLegend": "Number of contacts",
     "errorTitle": "Failed to load analytics",
-    "errorDescription": "There was a problem fetching the analytics data."
+    "errorDescription": "There was a problem fetching the analytics data.",
+    "noDataCard": {
+      "title": "Welcome to your Analytics!",
+      "description": "No data to analyze yet. Start by adding your first contact to see your analytics in action.",
+      "link": "Add a contact"
+    }
   },
   "ProfilePage": {
     "title": "Profile & Settings",

@@ -25,19 +25,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, LayoutDashboard, Users, BarChart, LifeBuoy } from 'lucide-react'; // Import necessary icons
+import { LogOut, User, Settings, LayoutDashboard, Users, BarChart, LifeBuoy } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl'; // Import useTranslations
+import { useTranslations } from 'next-intl';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const t = useTranslations('AppLayout'); // Initialize translations
+  const t = useTranslations('AppLayout');
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -84,15 +84,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader className="p-4 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-            {/* Placeholder Logo - Replace with actual logo */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-primary"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-            </svg>
+            <Image
+              src="/images/app_logo.jpg"
+              alt="Lead-wise CRM Logo"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
             <span className="group-data-[collapsible=icon]:hidden">{t('appName')}</span>
           </Link>
           {/* Trigger is usually outside the sidebar in the main content header */}

@@ -29,6 +29,7 @@ import {
   Mail,
   Activity,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
@@ -38,6 +39,9 @@ import { db } from '@/lib/firebase';
 import React, { useMemo } from 'react';
 import { format, subDays } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // Mock data (will be replaced by Firebase data)
 const totalContacts = 1256;
@@ -233,6 +237,24 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">{t('errorDescription')}</p>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (contacts && contacts.length === 0) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold">{t('title')}</h1>
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>{t('noDataCard.title')}</AlertTitle>
+          <AlertDescription>
+            {t('noDataCard.description')}
+            <Button asChild variant="link" className="p-0 h-auto ml-1">
+              <Link href="/contacts">{t('noDataCard.link')}</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 

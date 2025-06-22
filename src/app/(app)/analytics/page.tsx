@@ -8,6 +8,7 @@ import {
   TrendingDown,
   Users,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -30,6 +31,9 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/providers/auth-provider';
 import { differenceInDays, subDays } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c', '#d0ed57', '#ffc658'];
 
@@ -173,6 +177,24 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (contacts && contacts.length === 0) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold">{t('title')}</h1>
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>{t('noDataCard.title')}</AlertTitle>
+          <AlertDescription>
+            {t('noDataCard.description')}
+            <Button asChild variant="link" className="p-0 h-auto ml-1">
+              <Link href="/contacts">{t('noDataCard.link')}</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

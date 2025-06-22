@@ -112,7 +112,12 @@
     "mockTask3": "Envoyer la proposition à Gamma Solutions",
     "activityUnknown": "Inconnu",
     "errorTitle": "Erreur de chargement du tableau de bord",
-    "errorDescription": "Un problème est survenu lors de la récupération de vos données. Veuillez réessayer plus tard."
+    "errorDescription": "Un problème est survenu lors de la récupération de vos données. Veuillez réessayer plus tard.",
+    "noDataCard": {
+      "title": "Bienvenue sur votre tableau de bord !",
+      "description": "Tout semble un peu vide ici. Commencez par ajouter votre premier contact pour voir votre tableau de bord en action.",
+      "link": "Ajouter un contact"
+    }
   },
   "ContactsPage": {
     "title": "Contacts",
@@ -373,7 +378,12 @@
     "totalCustomersDescription": "Clients actifs dans le système",
     "contactCountLegend": "Nombre de contacts",
     "errorTitle": "Erreur de chargement des analyses",
-    "errorDescription": "Un problème est survenu lors de la récupération des données d'analyse."
+    "errorDescription": "Un problème est survenu lors de la récupération des données d'analyse.",
+    "noDataCard": {
+      "title": "Bienvenue dans vos Analyses !",
+      "description": "Il n'y a pas encore de données à analyser. Commencez par ajouter des contacts pour voir les graphiques.",
+      "link": "Ajouter un contact"
+    }
   },
   "ProfilePage": {
     "title": "Profil & paramètres",
