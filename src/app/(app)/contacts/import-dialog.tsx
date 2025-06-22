@@ -114,7 +114,7 @@ export function ImportContactsDialog({
         const skipped = 0;
 
         setStatus('validating');
-        const validContacts: (Contact & { originalRow: number })[] = [];
+        const validContacts: (Omit<Contact, 'companyId'> & { originalRow: number })[] = [];
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
@@ -127,7 +127,7 @@ export function ImportContactsDialog({
             else row.tags = [];
 
             // Zod validation
-            const validation = contactSchema.safeParse(row);
+            const validation = contactSchema.omit({ companyId: true }).safeParse(row);
             if (!validation.success) {
               const formattedErrors = validation.error.errors
                 .map(e => `${e.path.join('.')}: ${e.message}`)
