@@ -4,12 +4,29 @@ import React, { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
-import { doc, getDoc, setDoc, FirestoreError } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  FirestoreError,
+  collection,
+  query,
+  getDocs,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -19,31 +36,71 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { UserCog, Database, Palette, Bell, Download } from 'lucide-react';
+import { UserCog, Database, Palette, Bell, Download, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { setLocale } from '@/i18n/actions';
+import { Contact } from '@/types/contact';
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { DataExportDialog } from './data-export-dialog';
+import { DataImportDialog } from './data-import-dialog';
+import { useQueryClient } from '@tanstack/react-query';
+import { CustomFieldsManager } from './custom-fields-manager';
+import { AuditLogsSection } from './audit-logs-section';
+import { Switch } from '@/components/ui/switch';
 
+// --- Data Export Logic ---
+type ExportableEntity = 'contacts';
+
+async function fetchContacts(userId: string): Promise<Contact[]> {
+  const companyId = userId;
+  const contactsCol = collection(db, 'companies', companyId, 'contacts');
+  const q = query(contactsCol);
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Contact);
+}
+
+function prepareContactsForExport(contacts: Contact[]) {
+  return contacts.map(contact => {
+    const { id, companyId, scoreJustification, tags, lastCommunicationDate, ...rest } = contact;
+    return {
+      ...rest,
+      tags: tags?.join('|') || '',
+      lastCommunicationDate: lastCommunicationDate
+        ? format(new Date((lastCommunicationDate as any).seconds * 1000), 'yyyy-MM-dd')
+        : '',
+    };
+  });
+}
+
+async function exportData(entity: ExportableEntity, userId: string): Promise<Blob> {
+  let data;
+  switch (entity) {
+    case 'contacts':
+      const contacts = await fetchContacts(userId);
+      if (contacts.length === 0) throw new Error('No contacts to export.');
+      data = prepareContactsForExport(contacts);
+      break;
+    default:
+      throw new Error('Unsupported entity type for export');
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, entity);
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  return new Blob([excelBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8;',
+  });
+}
+
+// --- Settings Page ---
 interface Settings {
   id: string;
   theme: 'light' | 'dark' | 'system';
   language: string;
-  notifications: {
-    email: boolean;
-    push: boolean;
-    inApp: boolean;
-  };
+  notifications: { email: boolean; push: boolean; inApp: boolean };
 }
 
 type FlattenedSettings = {
@@ -58,6 +115,8 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = React.useTransition();
+  const [isExportDialogOpen, setExportDialogOpen] = useState(false);
+  const [isImportDialogOpen, setImportDialogOpen] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   const locale = useLocale();
@@ -65,6 +124,7 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const t = useTranslations('SettingsPage');
   const tGeneric = useTranslations('Generic');
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     const fetchSettings = async () => {
@@ -123,10 +183,11 @@ export default function SettingsPage() {
     try {
       const settingsRef = doc(db, 'users', user.uid, 'settings', 'preferences');
       await setDoc(settingsRef, { [key]: value }, { merge: true });
-      toast({
-        title: t('languageChangeTitle'),
-        description: t('languageChangeDescription', { locale: value }),
-      });
+      if (key !== 'language' && key !== 'theme') {
+        toast({
+          title: tGeneric('updateSuccess'),
+        });
+      }
     } catch (error) {
       toast({ variant: 'destructive', title: tGeneric('error') });
     }
@@ -135,13 +196,14 @@ export default function SettingsPage() {
   const handleLanguageChange = async (newLocale: string) => {
     if (isPending) return;
 
-    // 1. Save preference to DB for persistence across sessions/devices
     await handleSettingChange('language', newLocale);
 
-    // 2. Set cookie for the current session
-    await setLocale(newLocale);
+    toast({
+      title: t('languageChangeTitle'),
+      description: t('languageChangeDescription', { locale: newLocale }),
+    });
 
-    // 3. Refresh the page to apply the new language
+    await setLocale(newLocale);
     startTransition(() => {
       router.refresh();
     });
@@ -150,10 +212,6 @@ export default function SettingsPage() {
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
     handleSettingChange('theme', newTheme);
-  };
-
-  const handleExport = () => {
-    toast({ title: t('exportInitiated'), description: t('exportDescription') });
   };
 
   if (loading) {
@@ -183,7 +241,7 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
-      <Tabs defaultValue="appearance" className="w-full">
+      <Tabs defaultValue="data" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">
             <UserCog className="mr-2 h-4 w-4" />
@@ -228,48 +286,22 @@ export default function SettingsPage() {
               <CardDescription>{t('dataDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="font-medium">{t('customFieldsTitle')}</h3>
-                <div className="p-4 border rounded-lg min-h-[150px] bg-muted flex items-center justify-center">
-                  <p className="text-muted-foreground">{t('customFieldsComingSoon')}</p>
-                </div>
-                <Button variant="outline" disabled>
-                  {t('addCustomFieldButton')}
-                </Button>
-              </div>
+              <CustomFieldsManager />
               <Separator />
               <div className="space-y-2">
                 <h3 className="font-medium">{t('dataImportExportTitle')}</h3>
                 <p className="text-sm text-muted-foreground">{t('dataImportExportDescription')}</p>
                 <div className="flex gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline">{t('importContactsButton')}</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t('importContactsAlertTitle')}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t('importContactsAlertDescription')}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t('okButton')}</AlertDialogCancel>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <Button variant="outline" onClick={handleExport}>
-                    <Download className="mr-2 h-4 w-4" /> {t('exportContactsButton')}
+                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" /> {t('importButton')}
+                  </Button>
+                  <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+                    <Download className="mr-2 h-4 w-4" /> {t('exportButton')}
                   </Button>
                 </div>
               </div>
               <Separator />
-              <div className="space-y-2">
-                <h3 className="font-medium">{t('auditLogsTitle')}</h3>
-                <Button variant="outline" disabled>
-                  {t('viewAuditLogsButton')}
-                </Button>
-              </div>
+              <AuditLogsSection />
             </CardContent>
           </Card>
         </TabsContent>
@@ -324,12 +356,68 @@ export default function SettingsPage() {
               <CardTitle>{t('notificationsTitle')}</CardTitle>
               <CardDescription>{t('notificationsDescription')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{t('notificationsComingSoon')}</p>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="email-notifications" className="font-medium">
+                    {t('emailNotificationsLabel')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('emailNotificationsDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="email-notifications"
+                  checked={settings?.notifications.email}
+                  onCheckedChange={value => handleSettingChange('notifications.email', value)}
+                  disabled={isPending}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="push-notifications" className="font-medium">
+                    {t('pushNotificationsLabel')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('pushNotificationsDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="push-notifications"
+                  checked={settings?.notifications.push}
+                  onCheckedChange={value => handleSettingChange('notifications.push', value)}
+                  disabled={isPending}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="inApp-notifications" className="font-medium">
+                    {t('inAppNotificationsLabel')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('inAppNotificationsDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="inApp-notifications"
+                  checked={settings?.notifications.inApp}
+                  onCheckedChange={value => handleSettingChange('notifications.inApp', value)}
+                  disabled={isPending}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <DataExportDialog isOpen={isExportDialogOpen} onOpenChange={setExportDialogOpen} />
+      <DataImportDialog
+        isOpen={isImportDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImportComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ['contacts', user?.uid] });
+        }}
+      />
     </div>
   );
 }
