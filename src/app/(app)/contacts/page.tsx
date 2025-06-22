@@ -56,6 +56,7 @@ import { Card } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import Papa from 'papaparse';
 import { ImportContactsDialog } from './import-dialog';
+import { safeFormatTimestamp } from '@/lib/utils';
 
 // Type for Sales Strategy Result
 interface SalesStrategyResult {
@@ -199,11 +200,11 @@ export default function ContactsPage() {
       const scoreInput = {
         engagement: contact.lastCommunicationMethod || 'N/A',
         exchanges: contact.communicationSummary || 'No summary available.',
-        history: `Last contacted: ${
-          contact.lastCommunicationDate
-            ? format(new Date((contact.lastCommunicationDate as any).seconds * 1000), 'PPP')
-            : 'N/A'
-        }`,
+        history: `Last contacted: ${safeFormatTimestamp(
+          contact.lastCommunicationDate,
+          'PPP',
+          'N/A'
+        )}`,
         otherCriteria: `Type: ${contact.type}, Tags: ${contact.tags?.join(', ') || 'None'}`,
       };
 
@@ -268,9 +269,7 @@ export default function ContactsPage() {
         return {
           ...remaningContact,
           tags: tags?.join('|') || '', // Convert array to a pipe-separated string
-          lastCommunicationDate: lastCommunicationDate
-            ? format(new Date((lastCommunicationDate as any).seconds * 1000), 'yyyy-MM-dd')
-            : '',
+          lastCommunicationDate: safeFormatTimestamp(lastCommunicationDate, 'yyyy-MM-dd', ''),
         };
       });
 
@@ -388,9 +387,7 @@ export default function ContactsPage() {
           'N/A'
         );
       case 'lastCommunicationDate':
-        return contact.lastCommunicationDate
-          ? format(new Date((contact.lastCommunicationDate as any).seconds * 1000), 'PP')
-          : 'N/A';
+        return safeFormatTimestamp(contact.lastCommunicationDate, 'PP', 'N/A');
       case 'actions':
         return (
           <DropdownMenu>
@@ -453,7 +450,7 @@ export default function ContactsPage() {
       default:
         const value = contact[columnKey as keyof Contact];
         if (typeof value === 'object' && value !== null && 'seconds' in value) {
-          return format(new Date((value as any).seconds * 1000), 'PP');
+          return safeFormatTimestamp(value, 'PP', 'N/A');
         }
         return value !== undefined && value !== null ? String(value) : 'N/A';
     }

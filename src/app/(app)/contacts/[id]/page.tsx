@@ -48,6 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useLocale, useTranslations } from 'next-intl';
+import { safeFormatTimestamp, safeTimestampToDate } from '@/lib/utils';
 
 // Type for Sales Strategy Result (consider moving to types)
 interface SalesStrategyResult {
@@ -150,11 +151,11 @@ export default function ContactDetailPage() {
       const scoreInput = {
         engagement: contact.lastCommunicationMethod || 'N/A',
         exchanges: contact.communicationSummary || t('noSummary'),
-        history: `Last contacted: ${
-          contact.lastCommunicationDate
-            ? format(new Date((contact.lastCommunicationDate as any).seconds * 1000), 'PPP')
-            : 'N/A'
-        }`,
+        history: `Last contacted: ${safeFormatTimestamp(
+          contact.lastCommunicationDate,
+          'PPP',
+          'N/A'
+        )}`,
         otherCriteria: `${t('type')}: ${contact.type}, ${t('tags')}: ${
           contact.tags?.join(', ') || t('noTags')
         }`,
@@ -253,7 +254,7 @@ export default function ContactDetailPage() {
     if (value instanceof Date) return format(value, 'PPP');
     // Handle Firestore Timestamp
     if (typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
-      return format(new Date(value.seconds * 1000), 'PPP p'); // Format date and time
+      return safeFormatTimestamp(value, 'PPP p', 'N/A'); // Format date and time
     }
     if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : fallback;
     return String(value);
@@ -419,9 +420,7 @@ export default function ContactDetailPage() {
           {contact.lastScoredAt && (
             <CardDescription>
               {t('scoreJustification')}{' '}
-              {`(${t('lastScored')}: ${displayValue(
-                new Date((contact.lastScoredAt as any).seconds * 1000)
-              )}):`}{' '}
+              {`(${t('lastScored')}: ${safeFormatTimestamp(contact.lastScoredAt, 'PPP', 'N/A')}):`}{' '}
               {displayValue(contact.scoreJustification, t('noJustification'))}
             </CardDescription>
           )}

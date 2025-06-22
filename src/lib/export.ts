@@ -3,6 +3,8 @@ import { db } from '@/lib/firebase';
 import { Contact } from '@/types/contact';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
+import { safeFormatTimestamp } from './utils';
 
 export type ExportableEntity = 'contacts';
 
@@ -21,7 +23,7 @@ function prepareContactsForExport(contacts: Contact[]) {
       ...rest,
       tags: tags?.join('|') || '',
       lastCommunicationDate: lastCommunicationDate
-        ? format(new Date((lastCommunicationDate as any).seconds * 1000), 'yyyy-MM-dd')
+        ? safeFormatTimestamp(lastCommunicationDate, 'yyyy-MM-dd', '')
         : '',
     };
   });

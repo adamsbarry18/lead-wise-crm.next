@@ -25,6 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('metadataTitle'),
     description: t('metadataDescription'),
+    icons: {
+      icon: '/favicon.ico',
+      shortcut: '/favicon.ico',
+      apple: '/favicon.ico',
+    },
   };
 }
 
@@ -34,6 +39,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body
         className={cn(
           'min-h-screen bg-background font-sans antialiased',

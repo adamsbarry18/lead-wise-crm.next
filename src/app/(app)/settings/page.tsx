@@ -43,6 +43,7 @@ import { setLocale } from '@/i18n/actions';
 import { Contact } from '@/types/contact';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
+import { safeFormatTimestamp } from '@/lib/utils';
 import { DataExportDialog } from './data-export-dialog';
 import { DataImportDialog } from './data-import-dialog';
 import { useQueryClient } from '@tanstack/react-query';
@@ -67,9 +68,7 @@ function prepareContactsForExport(contacts: Contact[]) {
     return {
       ...rest,
       tags: tags?.join('|') || '',
-      lastCommunicationDate: lastCommunicationDate
-        ? format(new Date((lastCommunicationDate as any).seconds * 1000), 'yyyy-MM-dd')
-        : '',
+      lastCommunicationDate: safeFormatTimestamp(lastCommunicationDate, 'yyyy-MM-dd', ''),
     };
   });
 }
