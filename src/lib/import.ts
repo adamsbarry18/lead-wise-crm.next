@@ -23,6 +23,19 @@ const entityConfigs: Record<ImportableEntity, EntityConfig> = {
       } else {
         delete row.score; // Supprimer si invalide pour passer la validation Zod
       }
+
+      // Convertir la date de dernière communication
+      if (row.lastCommunicationDate && typeof row.lastCommunicationDate === 'string') {
+        // Le format YYYY-MM-DD peut être mal interprété comme UTC. Ajouter l'heure pour forcer le fuseau horaire local.
+        const date = new Date(`${row.lastCommunicationDate}T00:00:00`);
+        if (!isNaN(date.getTime())) {
+          row.lastCommunicationDate = date;
+        } else {
+          // La date est invalide, la supprimer pour éviter un échec de validation
+          delete row.lastCommunicationDate;
+        }
+      }
+
       row.tags =
         typeof row.tags === 'string'
           ? row.tags
@@ -46,12 +59,13 @@ export async function importData(
   entity: ImportableEntity,
   userId: string,
   data: any[]
-): Promise<{ created: number; errors: { row: number; message: string }[] }> {
+): Promise<{ created: number; updated: number; errors: { row: number; message: string }[] }> {
   const config = entityConfigs[entity];
   if (!config) throw new Error(`Unsupported entity type for import: ${entity}`);
 
   const errors: { row: number; message: string }[] = [];
   let created = 0;
+  let updated = 0;
 
   const validRows: any[] = [];
   for (let i = 0; i < data.length; i++) {
@@ -80,27 +94,48 @@ export async function importData(
     const batchData = validRows.slice(i, i + batchSize);
     const batch = writeBatch(db);
 
+    let createdInBatch = 0;
+    let updatedInBatch = 0;
+
     for (const item of batchData) {
-      const docRef = doc(entityCollectionRef); // Créer un nouveau document
-      batch.set(docRef, {
-        ...item,
-        companyId: userId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      created++;
+      let docRef;
+      if (item.id) {
+        docRef = doc(entityCollectionRef, item.id);
+        batch.set(
+          docRef,
+          {
+            ...item,
+            companyId: userId,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        updatedInBatch++;
+      } else {
+        docRef = doc(entityCollectionRef); // Créer un nouveau document
+        batch.set(docRef, {
+          ...item,
+          id: docRef.id,
+          companyId: userId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        createdInBatch++;
+      }
     }
 
     try {
       await batch.commit();
+      created += createdInBatch;
+      updated += updatedInBatch;
     } catch (e: any) {
       errors.push({
         row: i,
         message: `Batch (lignes ${i + 2}-${i + 2 + batchData.length}) a échoué: ${e.message}`,
       });
-      created -= batchData.length; // Annuler le comptage pour le batch échoué
+      // Ne pas incrémenter les compteurs pour le batch échoué
     }
   }
 
-  return { created, errors };
+  return { created, updated, errors };
 }

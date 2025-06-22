@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
-import { doc, setDoc, Timestamp, FirestoreError } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, FirestoreError, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,32 +42,13 @@ import { CalendarIcon, ArrowLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { z } from 'zod';
-import { collection } from 'firebase/firestore';
+import { contactSchema, Contact } from '@/types/contact';
 
-// Define the contact schema
-const contactSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, { message: 'Name is required' }),
-  type: z.enum(['Prospect', 'Lead', 'MQL', 'Customer', 'Partner']),
-  jobTitle: z.string().optional(),
-  tags: z.array(z.string()),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  timezone: z.string().optional(),
-  lastCommunicationDate: z.date().optional(),
-  lastCommunicationMethod: z.string().optional(),
-  communicationSummary: z.string().optional(),
-  communicatedBy: z.string().optional(),
-  companyId: z.string().optional(),
-  createdAt: z.any().optional(),
-  updatedAt: z.any().optional(),
-  score: z.number().optional(),
-  scoreJustification: z.string().optional(),
-  lastScoredAt: z.any().optional(),
-});
-
-type ContactFormData = z.infer<typeof contactSchema>;
+// Type for form values, excluding read-only/server-managed fields
+type NewContactFormValues = Omit<
+  Contact,
+  'companyId' | 'createdAt' | 'updatedAt' | 'id' | 'score' | 'scoreJustification' | 'lastScoredAt'
+>;
 
 export default function NewContactPage() {
   const [loading, setLoading] = useState(false);
@@ -78,7 +59,7 @@ export default function NewContactPage() {
   const tGeneric = useTranslations('Generic');
   const [tagInput, setTagInput] = useState('');
 
-  const form = useForm({
+  const form = useForm<NewContactFormValues>({
     resolver: zodResolver(
       contactSchema.omit({
         companyId: true,
@@ -89,20 +70,19 @@ export default function NewContactPage() {
         scoreJustification: true,
         lastScoredAt: true,
       })
-    ), // Omit fields managed server-side or auto-generated
+    ),
     defaultValues: {
-      name: '',
+      fullName: '',
       type: 'Prospect',
       jobTitle: '',
       tags: [],
       phone: '',
       email: '',
-      // score will be calculated by AI later
       timezone: '',
-      lastCommunicationDate: undefined, // Initialize as undefined
+      lastCommunicationDate: undefined,
       lastCommunicationMethod: '',
       communicationSummary: '',
-      communicatedBy: user?.email || '', // Default to current user's email
+      communicatedBy: user?.email || '',
     },
   });
 
@@ -128,7 +108,7 @@ export default function NewContactPage() {
     );
   };
 
-  const onSubmit = async (values: z.infer<typeof contactSchema>) => {
+  const onSubmit = async (values: NewContactFormValues) => {
     if (!user) return;
 
     setLoading(true);
@@ -137,16 +117,25 @@ export default function NewContactPage() {
       // Create a new document reference with an auto-generated ID
       const contactsRef = doc(collection(db, 'companies', companyId, 'contacts'));
 
-      const dataToSave = {
+      const dataToSave: any = {
         ...values,
         id: contactsRef.id, // Use the auto-generated ID
         companyId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
-        lastCommunicationDate: values.lastCommunicationDate
-          ? Timestamp.fromDate(values.lastCommunicationDate as unknown as Date)
-          : null,
       };
+
+      // Convert Date back to Firestore Timestamp if present
+      if (values.lastCommunicationDate) {
+        dataToSave.lastCommunicationDate = Timestamp.fromDate(values.lastCommunicationDate as Date);
+      }
+
+      // Remove undefined fields before saving, as Firestore doesn't support them
+      Object.keys(dataToSave).forEach(key => {
+        if (dataToSave[key] === undefined) {
+          delete dataToSave[key];
+        }
+      });
 
       await setDoc(contactsRef, dataToSave);
 
@@ -186,7 +175,7 @@ export default function NewContactPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="fullName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('fullNameLabel')}</FormLabel>
@@ -333,7 +322,7 @@ export default function NewContactPage() {
                             )}
                           >
                             {field.value ? (
-                              format(field.value as unknown as Date, 'PPP') // Assert type to Date for formatting
+                              format(field.value as Date, 'PPP') // Assert type to Date for formatting
                             ) : (
                               <span>{t('pickDate')}</span>
                             )}
@@ -344,7 +333,7 @@ export default function NewContactPage() {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value as unknown as Date} // Assert type to Date
+                          selected={field.value as Date} // Assert type to Date
                           onSelect={field.onChange}
                           disabled={date => date > new Date() || date < new Date('1900-01-01')}
                           initialFocus

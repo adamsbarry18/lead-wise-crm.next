@@ -14,19 +14,33 @@ export const contactSchema = z.object({
   score: z.number().min(0).max(100).optional().describe('AI-calculated score (0-100)'),
   scoreJustification: z.string().optional().describe('Justification for the AI score'),
   lastScoredAt: z
-    .custom<Timestamp>(val => val instanceof Timestamp)
+    .custom<Timestamp | Date>(
+      val => val instanceof Timestamp || (val instanceof Date && !isNaN(val.getTime()))
+    )
     .optional()
     .describe('Timestamp of the last scoring'),
   timezone: z.string().optional(),
   // Use Firestore Timestamp for dates
-  lastCommunicationDate: z.custom<Timestamp>(val => val instanceof Timestamp).optional(),
+  lastCommunicationDate: z
+    .custom<
+      Timestamp | Date
+    >(val => val instanceof Timestamp || (val instanceof Date && !isNaN(val.getTime())))
+    .optional(),
   lastCommunicationMethod: z.string().optional(),
   communicationSummary: z.string().optional().describe('AI summary of communications'),
   communicatedBy: z.string().optional().describe('Agent/User who last communicated'),
   // Add fields for custom field management if needed later
   // customFields: z.record(z.any()).optional(),
-  createdAt: z.custom<Timestamp>(val => val instanceof Timestamp).optional(),
-  updatedAt: z.custom<Timestamp>(val => val instanceof Timestamp).optional(),
+  createdAt: z
+    .custom<
+      Timestamp | Date
+    >(val => val instanceof Timestamp || (val instanceof Date && !isNaN(val.getTime())))
+    .optional(),
+  updatedAt: z
+    .custom<
+      Timestamp | Date
+    >(val => val instanceof Timestamp || (val instanceof Date && !isNaN(val.getTime())))
+    .optional(),
 });
 
 // TypeScript interface derived from the schema

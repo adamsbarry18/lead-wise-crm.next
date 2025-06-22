@@ -14,20 +14,11 @@ import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/components/providers/auth-provider';
-import { Contact, contactSchema } from '@/types/contact';
 import Papa from 'papaparse';
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  doc,
-  getDoc,
-  writeBatch,
-  serverTimestamp,
-  Timestamp,
-} from 'firebase/firestore';
 import { UploadCloud, File, X, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { importData } from '@/lib/import';
 
 interface ImportDialogProps {
   isOpen: boolean;
@@ -35,7 +26,7 @@ interface ImportDialogProps {
   onImportComplete: () => void;
 }
 
-type ImportStatus = 'idle' | 'parsing' | 'validating' | 'importing' | 'complete';
+type ImportStatus = 'idle' | 'parsing' | 'importing' | 'complete';
 type ImportResult = {
   created: number;
   updated: number;
@@ -83,7 +74,7 @@ export function ImportContactsDialog({
   });
 
   const handleClose = () => {
-    if (status !== 'importing' && status !== 'validating') {
+    if (status !== 'importing') {
       setFile(null);
       setResult(null);
       setStatus('idle');
@@ -91,8 +82,9 @@ export function ImportContactsDialog({
       onOpenChange(false);
     }
   };
+
   const handleImport = async () => {
-    if (!file || !user) {
+    if (!file || !user?.uid) {
       toast({
         title: tToast('noFileTitle'),
         description: tToast('noFileDescription'),
@@ -108,83 +100,18 @@ export function ImportContactsDialog({
       skipEmptyLines: true,
       complete: async results => {
         const rows = results.data as any[];
-        const errors: { row: number; message: string }[] = [];
-        let created = 0,
-          updated = 0;
-        const skipped = 0;
-
-        setStatus('validating');
-        const validContacts: (Omit<Contact, 'companyId'> & { originalRow: number })[] = [];
-
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          const rowNum = i + 2; // CSV row number (1-based + header)
-
-          try {
-            // Data transformation
-            if (row.score) row.score = parseInt(row.score, 10);
-            if (row.tags) row.tags = (row.tags as string).split('|');
-            else row.tags = [];
-
-            // Zod validation
-            const validation = contactSchema.omit({ companyId: true }).safeParse(row);
-            if (!validation.success) {
-              const formattedErrors = validation.error.errors
-                .map(e => `${e.path.join('.')}: ${e.message}`)
-                .join(', ');
-              throw new Error(formattedErrors);
-            }
-            validContacts.push({ ...validation.data, originalRow: rowNum });
-          } catch (error: any) {
-            errors.push({ row: rowNum, message: error.message });
-          }
-          setProgress(10 + Math.round(((i + 1) / rows.length) * 40));
-        }
-
-        if (!user?.uid) return;
         setStatus('importing');
-        const companyId = user.uid;
-        const contactsRef = collection(db, 'companies', companyId, 'contacts');
-        const batchSize = 490; // Firestore batch limit is 500 operations
-        const batches = [];
-        for (let i = 0; i < validContacts.length; i += batchSize) {
-          batches.push(validContacts.slice(i, i + batchSize));
-        }
+        setProgress(50);
 
-        for (let i = 0; i < batches.length; i++) {
-          const batch = writeBatch(db);
-          const currentBatch = batches[i];
+        const importResult = await importData('contacts', user.uid, rows);
 
-          for (const contact of currentBatch) {
-            if (contact.id) {
-              const docRef = doc(contactsRef, contact.id);
-              batch.set(
-                docRef,
-                { ...contact, companyId, updatedAt: serverTimestamp() },
-                { merge: true }
-              );
-              updated++;
-            } else {
-              const docRef = doc(contactsRef); // Create new doc with new ID
-              batch.set(docRef, {
-                ...contact,
-                companyId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-              });
-              created++;
-            }
-          }
+        setResult({
+          ...importResult,
+          failed: importResult.errors.length,
+          skipped: 0, // La fonction d'import ne gère pas les "skipped" pour le moment
+        });
 
-          try {
-            await batch.commit();
-          } catch (error: any) {
-            errors.push({ row: 0, message: `Batch ${i + 1} failed: ${error.message}` });
-          }
-          setProgress(50 + Math.round(((i + 1) / batches.length) * 50));
-        }
-
-        setResult({ created, updated, skipped, failed: errors.length, errors });
+        setProgress(100);
         setStatus('complete');
         onImportComplete();
       },
@@ -231,14 +158,11 @@ export function ImportContactsDialog({
       );
     }
 
-    if (status !== 'idle') {
+    if (status === 'parsing' || status === 'importing') {
       let progressText = '';
       switch (status) {
         case 'parsing':
           progressText = t('processing');
-          break;
-        case 'validating':
-          progressText = t('validating', { current: '...', total: '...' });
           break;
         case 'importing':
           progressText = t('importing', { currentBatch: '...', totalBatches: '...' });
@@ -286,20 +210,14 @@ export function ImportContactsDialog({
               </Button>
             </div>
           )}
-          {!file && renderContent()}
-          {file && status === 'idle' && <div className="mt-4">{renderContent()}</div>}
-          {status !== 'idle' && renderContent()}
+          {(!file || status !== 'idle') && renderContent()}
         </div>
         <DialogFooter>
           {status === 'complete' ? (
             <Button onClick={handleClose}>{t('close')}</Button>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                onClick={handleClose}
-                disabled={status === 'importing' || status === 'validating'}
-              >
+              <Button variant="ghost" onClick={handleClose} disabled={status === 'importing'}>
                 {t('cancel', { ns: 'ContactsPage' })}
               </Button>
               <Button onClick={handleImport} disabled={!file || status !== 'idle'}>

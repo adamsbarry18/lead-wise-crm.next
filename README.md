@@ -1,96 +1,127 @@
-# LeadMaster CRM
+# Lead Wise CRM
 
 A modern SaaS CRM powered by Firebase and AI, designed for comprehensive lead management and intelligent sales strategies.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Version](https://img.shields.io/badge/version-0.1.0-green.svg)
 
 ## 🚀 Features
 
-### 💼 Business Management
-
-- Company profile creation and management
-- Multi-user access with role-based permissions
-- Secure authentication with Firebase Auth
-- Customizable business settings
-
-### 👥 Contact Management
-
-- Customizable contact forms with drag-and-drop field builder
-- Advanced contact listing with 50+ customizable columns
-- Multi-criteria filtering and saved views
-- Automated lead scoring powered by Google Gemini
-- AI-generated sales strategies for each contact
-
-### 📊 Analytics Dashboard
-
-- Real-time performance metrics
-- Activity tracking (emails, calls, meetings)
-- Dynamic KPIs and conversion rates
-- Custom report generation
-
-### 🤖 AI Integration
-
-- Automated lead scoring
-- Intelligent sales strategy generation
-- Communication analysis and insights
-- Personalized action plans
+- **Secure Authentication**: Robust user management with Firebase Auth.
+- **Dynamic Dashboard**: Real-time overview of key metrics and activities.
+- **Advanced Contact Management**: Create, edit, and manage contacts with ease.
+- **Data Import/Export**: Bulk import contacts via CSV and export data to Excel.
+- **AI-Powered Insights**:
+  - Automated lead scoring with Google Gemini.
+  - AI-generated sales strategies for each contact.
+- **In-Depth Analytics**: Visualize sales funnels, lead sources, and performance trends.
+- **Customization**: Custom fields for contacts and configurable settings.
+- **Internationalization**: Full support for English (en) and French (fr).
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 14, TailwindCSS, Shadcn UI
-- **Backend**: Firebase Functions
-- **Database**: Firestore
-- **Authentication**: Firebase Auth
-- **AI**: Google Gemini
-- **Internationalization**: i18n (EN/FR)
+- **Framework**: [Next.js](https://nextjs.org/) 15+ (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) with [Shadcn/ui](https://ui.shadcn.com/) for components.
+- **Backend & DB**: [Firebase](https://firebase.google.com/) (Firestore, Auth, Functions)
+- **AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit)
+- **State Management**: [TanStack Query v5](https://tanstack.com/query/latest) for server state.
+- **Forms**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) for validation.
+- **Charts**: [Recharts](https://recharts.org/)
+- **Internationalization**: [next-intl](https://next-intl.vercel.app/)
+- **Code Quality**: ESLint, Prettier, Husky, lint-staged
+- **Component Library**: Storybook
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 ```bash
-node >= 18.0.0
-npm >= 9.0.0
+node >= 20.0.0
+npm >= 10.0.0
 ```
 
 ### Installation
 
-1. Clone the repository
+1.  Clone the repository
+
+    ```bash
+    git clone https://github.com/adamsbarry18/lead-wise-crm.next.git
+    cd lead-wise-crm.next
+    ```
+
+2.  Install dependencies
+
+    ```bash
+    npm install
+    ```
+
+3.  Set up environment variables
+
+    ```bash
+    # Copy the example file. This will be ignored by git.
+    cp .env.example .env.local
+    ```
+
+    Fill in your Firebase and Google Gemini API credentials in `.env.local`.
+
+4.  Run the development server
+
+    ```bash
+    npm run dev
+    ```
+
+## 📥 Data Import
+
+You can bulk-import contacts using a CSV file. Go to the Contacts page and use the "Import" feature.
+
+### Contact Import Schema
+
+The CSV file must have a header row with the following columns. The order of columns does not matter.
+
+| Header                    | Required | Type     | Description                                                                    | Example                |
+| ------------------------- | -------- | -------- | ------------------------------------------------------------------------------ | ---------------------- | ---------------------------- |
+| `id`                      | No       | `string` | Provide an existing contact ID to update it. Leave empty for new contacts.     | `abcdef1234567890`     |
+| `fullName`                | **Yes**  | `string` | The full name of the contact.                                                  | `John Doe`             |
+| `type`                    | No       | `string` | One of: `Prospect`, `Lead`, `MQL`, `Customer`, `Partner`. Default: `Prospect`. | `Lead`                 |
+| `jobTitle`                | No       | `string` | The contact's job title.                                                       | `Marketing Director`   |
+| `email`                   | No       | `string` | A valid email address.                                                         | `john.doe@example.com` |
+| `phone`                   | No       | `string` | The contact's phone number.                                                    | `+1 123 456 7890`      |
+| `tags`                    | No       | `string` | A list of tags separated by a pipe (`                                          | `).                    | `marketing\|lead\|budget-q3` |
+| `timezone`                | No       | `string` | The contact's timezone (e.g., from IANA database).                             | `Europe/Paris`         |
+| `lastCommunicationDate`   | No       | `date`   | The date of the last interaction in `YYYY-MM-DD` format.                       | `2024-05-21`           |
+| `lastCommunicationMethod` | No       | `string` | The method used for the last interaction.                                      | `Email`                |
+| `communicationSummary`    | No       | `string` | A summary of the last interaction.                                             | `Discussed Q3 budget.` |
+| `communicatedBy`          | No       | `string` | The agent who had the last interaction.                                        | `Jane Smith`           |
+
+### Testing with Sample Data
+
+To quickly test the application with realistic data, you can import the sample file located at `data/init-contact.csv`. This file contains 20 sample contacts and is ready to be imported.
+
+_Note: You can also create a `contacts_import_template.csv` file in the `/public` directory to offer a downloadable template for your users._
+
+## 📁 Project Structure
 
 ```bash
-git clone https://github.com/yourusername/lead-master-crm.git
-cd lead-master-crm
+├── src/
+│ ├── ai/                     # AI integration with Genkit
+│ │ ├── flows/                # AI workflow definitions
+│ │ └── ai-instance.ts        # AI configuration
+│ ├── app/                    # Next.js app router
+│ │ ├── (app)/                # Protected routes (dashboard, contacts, etc.)
+│ │ └── (auth)/               # Authentication routes (login, signup)
+│ ├── components/
+│ │ ├── providers/            # React context providers (Auth, Theme)
+│ │ └── ui/                   # Reusable UI components (from Shadcn)
+│ ├── hooks/                  # Custom React hooks
+│ ├── i18n/                   # Internationalization setup
+│ ├── lib/                    # Utility functions (Firebase, helpers)
+│ └── types/                  # TypeScript type definitions
+├── messages/                 # i18n translation files (en.json, fr.json)
+├── public/                   # Static assets
+├── scripts/                  # Shell scripts for Docker
+└── ...                       # Root configuration files
 ```
-
-2. Install dependencies
-
-```bash
-npm install
-```
-
-3. Set up environment variables
-
-```bash
-cp .env.example .env.local
-```
-
-Fill in your Firebase and Google Gemini API credentials.
-
-4. Run the development server
-
-```bash
-npm run dev
-```
-
-## 📚 Documentation
-
-Detailed documentation is available in the `/docs` directory:
-
-- [Architecture Overview](docs/architecture.md)
-- [Firebase Setup](docs/firebase-setup.md)
-- [AI Integration](docs/ai-integration.md)
-- [Deployment Guide](docs/deployment.md)
 
 ## 🔐 Security & Compliance
 
@@ -105,33 +136,3 @@ Currently supported languages:
 
 - English (en)
 - French (fr)
-
-```bash
-├── src/
-│ ├── ai/ # AI integration modules
-│ │ ├── flows/ # AI workflow definitions
-│ │ │ ├── generate-sales-strategy.ts
-│ │ │ └── score-lead.ts
-│ │ └── ai-instance.ts # AI configuration
-│ ├── app/ # Next.js app router
-│ │ ├── (app)/ # Protected routes
-│ │ │ ├── analytics/ # Analytics dashboard
-│ │ │ ├── contacts/ # Contact management
-│ │ │ ├── dashboard/ # Main dashboard
-│ │ │ └── settings/ # App settings
-│ │ └── (auth)/ # Authentication routes
-│ ├── components/
-│ │ ├── providers/ # React context providers
-│ │ └── ui/ # Reusable UI components
-│ ├── hooks/ # Custom React hooks
-│ ├── i18n/ # Internationalization
-│ ├── lib/ # Utility functions
-│ ├── services/ # API services
-│ └── types/ # TypeScript definitions
-├── messages/ # i18n translation files
-│ ├── en.json
-│ └── fr.json
-├── docs/ # Documentation
-├── public/ # Static assets
-└── config files # Various configuration files
-```
